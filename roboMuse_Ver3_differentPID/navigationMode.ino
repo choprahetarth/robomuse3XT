@@ -19,7 +19,8 @@ void navigationMode() {
     //input = non_inc_theta;
     //input = (newLeftEncoderValue - (newRightEncoderValue)*(-1));
     //Serial.println(time);
-    input = feedbackVariable;
+    //input = feedbackVariable;
+    input = originalTheta;
     PID_L.Compute(); PID_R.Compute();
     //Serial.println(leftMotorSpeed);
     leftMotorSpeed += outputL;
@@ -39,8 +40,8 @@ void navigationMode() {
     saberTooth.motor(1, leftMotorSpeed);
     saberTooth.motor(2, rightMotorSpeed);
     //Serial.println(newLeftEncoderValue - (newRightEncoderValue)*(-1));
-    delay(200);
-    //Serial.println(originalTheta);
+    delay(1000);
+    Serial.println(originalTheta);
   }
   saberTooth.stop();
   delay(500);
