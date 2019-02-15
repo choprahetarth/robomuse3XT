@@ -2,8 +2,15 @@
 #include <Encoder.h>      // Header file for the Encoders
 #include <PID_v1.h>       // Header file for PID controller
 #include <math.h>         // Header file for Math Calculations
+#include <Plotter.h>      // Header file for Plotting the X-Y Trajectory Graph
 
+// Safety Feature added in the Navigation Mode
 int interApt =100;
+
+/// VARIABLES FOR PLOTTING ///
+//Plotter myPlot;
+
+////// VARIABLES FOR THE MACHINE /////
 
 // Flags
 String modeSelected;
@@ -33,15 +40,19 @@ double width = 515;   // distance between wheels
 float theta = 0;
 float feedbackVariable = 0;    // Error value
 //double orientation_vector[4] = {85,175,265,355};
-float orientation_vector[4] = {1.56, 4.70,9.41,12.55};
-float orientation_angle[4] = {1.56, 4.70,9.41,12.55};
+float orientation_vector[4] = {1.55, 4.68,9.39,12.53};
+float orientation_angle[4] = {1.55, 4.68,9.39,12.53};
 //double orientation_angle[4] = {90,180,270,360};
 
 // PID Variables
 double minVal = -15, maxVal = 15;
 double input = 0, setpoint = 0; // Input_Error_value, Controler_Output_value, Desired_Error_value
-double KpL = 75, KiL = 20, KdL = 0.1, outputL = 0; // Proportional, Integral & Derivative coefficients
-double KpR = 75, KiR = 20, KdR = 0.1, outputR = 0;  // of respective motors for PID control
+//double KpL = 75, KiL = 20, KdL = 0.1, outputL = 0; // Proportional, Integral & Derivative coefficients
+//double KpR = 75, KiR = 20, KdR = 0.1, outputR = 0;  // of respective motors for PID control
+//double KpL = 40, KiL = 3, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+//double KpR = 40, KiR = 3, KdR = 0, outputR = 0;  // of respective motors for PID control
+double KpL = 40, KiL = 3, KdL = 0, outputL = 30; // Proportional, Integral & Derivative coefficients
+double KpR = 40, KiR = 3, KdR = 0, outputR = 30;  // of respective motors for PID control
 
 Sabertooth saberTooth(128, Serial2);  // Packetized serial mode, Non-LI, 128 bit Addr. (0,0,1,1,1,1)
 Encoder enCoder_1(20, 21); // Left hand side enc., +ve value means forward
@@ -57,7 +68,6 @@ void odometryCalc() {
   newLeftEncoderValue = double(enCoder_1.read());
   newRightEncoderValue = double(enCoder_2.read());
   int time = millis();
-  //if (time % 5 == 0){
   leftEncoderIncrement = newLeftEncoderValue - oldLeftEncoderValue;
   rightEncoderIncrement = newRightEncoderValue - oldRightEncoderValue;
   //Serial.println(newRightEncoderValue);
@@ -71,7 +81,6 @@ void odometryCalc() {
   theta = atan((rightWheelIncrement - leftWheelIncrement) / width);
   //Serial.print("Theta : ");
   //Serial.println(theta);
- //}
   feedbackVariable = theta;
   oldLeftEncoderValue = newLeftEncoderValue;
   oldRightEncoderValue = newRightEncoderValue;
@@ -124,11 +133,20 @@ void calSpeed (double angle, double maxspeed, double theta) {
 void setup() {
   Serial.begin(9600);   // Serial communication with rasPi
   Serial2.begin(9600);  // Serial communication with Sabertooth motor driver, default baud rate
+  Serial3.begin(9600);  // Serial Communication with the Plotter
 
   PID_L.SetOutputLimits(minVal, maxVal);  // [Min,Max] values of output
   PID_L.SetMode(AUTOMATIC);  // Automatic = ON, Manual = OFF
   PID_R.SetOutputLimits(minVal, maxVal);
   PID_R.SetMode(AUTOMATIC);
+  
+  // Begin the Plotter
+  //myPlot.Begin();
+
+  // Add the X and Y Values
+  //myPlot.AddXYGraph("Trajectory", 1000, "X Axis", x, "Y Axis", y);
+//  myPlot.AddTimeGraph(" Relative Error". 1000, "Angle Deviation", theta); 
+  
   resetCoordinates();
 }
 
