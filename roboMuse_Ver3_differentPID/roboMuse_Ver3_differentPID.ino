@@ -49,10 +49,10 @@ double minVal = -15, maxVal = 15;
 double input = 0, setpoint = 0; // Input_Error_value, Controler_Output_value, Desired_Error_value
 //double KpL = 75, KiL = 20, KdL = 0.1, outputL = 0; // Proportional, Integral & Derivative coefficients
 //double KpR = 75, KiR = 20, KdR = 0.1, outputR = 0;  // of respective motors for PID control
-//double KpL = 40, KiL = 3, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
-//double KpR = 40, KiR = 3, KdR = 0, outputR = 0;  // of respective motors for PID control
-double KpL = 40, KiL = 3, KdL = 0, outputL = 30; // Proportional, Integral & Derivative coefficients
-double KpR = 40, KiR = 3, KdR = 0, outputR = 30;  // of respective motors for PID control
+double KpL = 40, KiL = 3, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+double KpR = 40, KiR = 3, KdR = 0, outputR = 0;  // of respective motors for PID control
+//double KpL = 40, KiL = 3, KdL = 0, outputL = 30; // PID Values if we need to move the Robot in a Trajectory.
+//double KpR = 40, KiR = 3, KdR = 0, outputR = 30;  // ""
 
 Sabertooth saberTooth(128, Serial2);  // Packetized serial mode, Non-LI, 128 bit Addr. (0,0,1,1,1,1)
 Encoder enCoder_1(20, 21); // Left hand side enc., +ve value means forward
