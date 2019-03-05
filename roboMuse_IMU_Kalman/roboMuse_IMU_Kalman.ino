@@ -27,14 +27,17 @@ float non_inc_theta = 0;
 
 // Odometry Variables
 double speedTurn = 0, prevTheta = 0;
-double centreIncremental = 0, x = 0, y = 0, originalTheta = 0, thetaInRadians = 0;
+double centreIncremental = 0, x = 0, y = 0;
+//double originalTheta = 30; 
+double originalTheta = 0; 
+double thetaInRadians = 0;
 double oldLeftEncoderValue = 0, newLeftEncoderValue = 0;
 double oldRightEncoderValue = 0, newRightEncoderValue = 0;
 double leftEncoderIncrement = 0, rightEncoderIncrement = 0;
 float conversionFactor = 0.1;   // rotary to linear
 double leftWheelIncrement = 0, rightWheelIncrement = 0;
 double width = 515;   // distance between wheels
-float theta = 0;
+double theta = 0;
 float feedbackVariable = 0;    // Error value
 //double orientation_vector[4] = {85,175,265,355};
 float orientation_vector[4] = {1.47, 4.50,9.24,12.45};
@@ -49,10 +52,12 @@ double minVal = -30, maxVal = 30;
 double input = 0.00, setpoint = 0.00; // Input_Error_value, Controler_Output_value, Desired_Error_value
 //double KpL = 75, KiL = 20, KdL = 0.1, outputL = 0; // Proportional, Integral & Derivative coefficients
 //double KpR = 75, KiR = 20, KdR = 0.1, outputR = 0;  // of respective motors for PID control
-double KpL = 30, KiL = 1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
-double KpR = 30, KiR = 1, KdR = 0, outputR = 0;  // of respective motors for PID control
+//double KpL = 30, KiL = 1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+//double KpR = 30, KiR = 1, KdR = 0, outputR = 0;  // of respective motors for PID control
 //double KpL = 40, KiL = 3, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
 //double KpR = 40, KiR = 3, KdR = 0, outputR = 0;  // of respective motors for PID control
+double KpL = 2, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+double KpR = 2, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
 
 Sabertooth saberTooth(128, Serial2);  // Packetized serial mode, Non-LI, 128 bit Addr. (0,0,1,1,1,1)
 Encoder enCoder_1(20, 21); // Left hand side enc., +ve value means forward
@@ -79,7 +84,7 @@ void odometryCalc() {
   leftWheelIncrement = leftEncoderIncrement * conversionFactor; // left side advanced-by-distance
   rightWheelIncrement = rightEncoderIncrement * conversionFactor * (-1); // right side advanced-by-distance
   theta = atan((rightWheelIncrement - leftWheelIncrement) / width);
-  //theta = theta * (180/M_PI);
+  theta = theta * (180/M_PI);
   //Serial.print("Theta : ");
   //Serial.println(theta);
   feedbackVariable = theta;
@@ -134,7 +139,7 @@ void calSpeed (double angle, double maxspeed, double theta) {
 }
 
 void setup() {
-  Serial.begin(9600);   // Serial communication with rasPi
+  Serial.begin(115200);   // Serial communication with rasPi
   Serial2.begin(9600);  // Serial communication with Sabertooth motor driver, default baud rate
   Serial3.begin(115200);  // Serial Communication with the Arduino Uno for I2C with IMU
   pinMode(34,OUTPUT);
