@@ -8,22 +8,41 @@ float angleFromIMUPITCHInRadians = 0;
 float angleFromIMUROLLInRadians = 0;
 int initialCounter = 0;
 float initialValue = 0;
-float offsetAngle = 0;
+float offsetAngleYAW = 0;
 int readOnceVariable = 1;
 float diffEncIMU = 0.0;
 float feedbackFromIMU =0;
+float newFeedbackFromIMU =0;
+//float totalIMUTheta =30;
+float totalIMUTheta = 0;
+float deltaIMUTheta =0;
+float oldFeedbackFromIMU = 0;
+float newRollFromIMU = 0;
+float deltaIMUROLLTheta =0;
+float oldRollFromIMU =0;
+float totalIMURollTheta =0;
 ////// Kalman Filter Variables ////////
+
 int timeHolder = 0;
 int initializationFlag = 1;
-float initialThetaValue = 0;
-float initialEstimateUncertainity =0;
-float predictedThetaValue =0;
-float originalMeasurement =0;
-float originalMeasurementError =0;
-float originalKalmanGain =0;
-float originalCovariance = 0;
-float estimatedThetaValue = 0;
-float updatedCovariance =0;
+double initialThetaValue = 0;
+double initialEstimateUncertainity =0;
+double predictedThetaValue =0;
+double originalMeasurement =0;
+double originalMeasurementError =0;
+double originalKalmanGain =0;
+double originalCovariance = 0;
+double estimatedThetaValue = 0;
+double updatedCovariance =0;
+int counterAddition = 0;
+
+///////////////////////////////////////
+////// Weighted Filter Variables //////
+float filterSetPoint = 0;
+float alpha1 , alpha2, alpha3 , alpha4 =0;
+float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
+float filterValue =0;
+float filteredTheta = 0;
 ///////////////////////////////////////
 void navigationMode() {
   while (abs(x) <= 8000 && interApt == 100) {
@@ -38,15 +57,15 @@ void navigationMode() {
       angleFromIMUYAW=Serial3.parseFloat();
       angleFromIMUPITCH=Serial3.parseFloat();
       angleFromIMUROLL=Serial3.parseFloat();
-      angleFromIMUInRadians = angleFromIMUYAW*(PI/180);
-      //angleFromIMUYAWInRadians = angleFromIMUYAW*(PI/180);
-      //angleFromIMUPITCHInRadians = angleFromIMUPITCH*(PI/180);
-      //angleFromIMUROLLInRadians = angleFromIMUROLL*(PI/180);
+      //angleFromIMUInRadians = angleFromIMUYAW;
+      angleFromIMUYAWInRadians = angleFromIMUYAW * (M_PI/180); 
+      angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
+      angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
       //Serial.println(angleFromIMUInRadians);
       //Serial.println(offsetAngle);
       //Serial.println(angleFromIMUROLL);
       //Serial.println(angleFromIMUROLL);
-      Serial.println(originalTheta);
+      //Serial.println(originalTheta);
       //Serial.println(angleFromIMUYAW);
       readOnce();
       }
@@ -59,44 +78,42 @@ void navigationMode() {
     //Serial.println(leftMotorSpeed);
     //Serial.println(rightMotorSpeed);
     //Serial.println(rampOutput);
-    leftMotorSpeed = 40;
-    rightMotorSpeed = 40;
+    leftMotorSpeed = 20;
+    rightMotorSpeed = 20;
     odometryCalc();
     errorDifference();
-    //Serial.println(y);
-    //Serial.println(newLeftEncoderValue - (newRightEncoderValue)*(-1));
-    //non_inc_theta = atan((newLeftEncoderValue/100 -(newRightEncoderValue)*(-1)/100)/width);
-    //input = non_inc_theta;
-    //input = (newLeftEncoderValue - (newRightEncoderValue)*(-1));
-    //Serial.println(time);
-    //input = feedbackVariable;
-    //input = originalTheta;
     setpoint = 0;
-    feedbackFromIMU = ((angleFromIMUInRadians)*(-1))+offsetAngle;
-    input = (feedbackFromIMU);
-    newKalmanFilter();
-    //Serial.println(((angleFromIMUInRadians)*(-1))-2.36);
-    //Serial.println(input);
-    //Serial.print("\t");
-    //Serial.println(originalTheta);
-    //Serial.print("\t");
-    //Serial.println(input - originalTheta);
+    
+    /// imu angle increment //////
+    
+    newFeedbackFromIMU = (((angleFromIMUYAWInRadians)*(-1)*(180/M_PI)))+offsetAngleYAW;
+    deltaIMUTheta = newFeedbackFromIMU - oldFeedbackFromIMU;
+    totalIMUTheta = (totalIMUTheta + deltaIMUTheta);
+    oldFeedbackFromIMU = newFeedbackFromIMU;
+    //Serial.println (totalIMUTheta);
+    
+    //// imu angle increment/////
+
+
+    /// imu roll increment ///
+
+    newRollFromIMU = (angleFromIMUROLLInRadians)*(180/M_PI);
+    deltaIMUROLLTheta = newRollFromIMU - oldRollFromIMU;
+    totalIMURollTheta = totalIMURollTheta + deltaIMUROLLTheta;
+    oldRollFromIMU = newRollFromIMU;
+    //Serial.print(",");
+    //Serial.println(totalIMURollTheta);
+    //Serial.print(-1.0);
+    //input = (feedbackFromIMU);
+    
+//    newKalmanFilter();
+    slipDetection();
+    weightedFilter();
+    //input = originalTheta;
+    input = estimatedThetaValue;
     PID_L.Compute(); PID_R.Compute();
-    //Serial.println(leftMotorSpeed);
     leftMotorSpeed += outputL;
     rightMotorSpeed -= outputR;
-    //Serial.println(input);
-    //Serial.println(outputL);
-    //Serial.println(feedbackVariable);
-    //time = 0;
-    //Serial.println(leftMotorSpeed);
-    //Serial.println("entered bitch");
-    //Serial.println("Error");
-    //Serial.println(newLeftEncoderValue);
-    //Serial.println(newRightEncoderValue);
-    //Serial.println(input);
-    //Serial.println(outputL);
-    //Serial.println(input);
     saberTooth.motor(1, leftMotorSpeed);
     saberTooth.motor(2, rightMotorSpeed);
     //Serial.println(newLeftEncoderValue - (newRightEncoderValue)*(-1));
@@ -130,7 +147,7 @@ void startIMUReading(int detectPin){
 
 void readOnce(){
   if (readOnceVariable == 1 ){
-    offsetAngle = angleFromIMUInRadians;
+    offsetAngleYAW = angleFromIMUYAWInRadians*(180/M_PI);
     readOnceVariable = 0;
     }
   }
@@ -140,56 +157,91 @@ void errorDifference(){
   //Serial.println(diffEncIMU);
   }
 
-/*void kalmanFilter(){
-    //read the angle //
-    //oldThetaEstimate = feedbackFromIMU;
-    if (readOnceVariable2 == 1){
-     oldThetaEstimate = originalTheta;
-     readOnceVariable2 = 0;
-    }
-    observedThetaValue = feedbackFromIMU;
-    //update
-    gainValue = (oldPredictionError /(oldPredictionError + rValue));
-    newThetaEstimate = oldThetaEstimate + gainValue* (observedThetaValue-oldThetaEstimate);
-    newPredictionError = (1-gainValue)* oldPredictionError;
-    //Serial.println(newThetaEstimate);
-    //Serial.print (",");
-    //Serial.print(feedbackFromIMU);
-    //Serial.print(",");
-    Serial.print(originalTheta);
-    //predict
-    oldPredictionError = newPredictionError;
-    oldThetaEstimate = newThetaEstimate; 
-  }*/
-
-void newKalmanFilter(){
+/*void newKalmanFilter(){
   //after 10 miliseconds the function should be initialized
-  
+    counterAddition++;
   ////Step 0 Initialization ////// runs only once 
+  
     if (initializationFlag == 1 ){
-      initialThetaValue = feedbackFromIMU;
-      originalCovariance = 0.2;
+      initialThetaValue = originalTheta;
+      //initialThetaValue = 0;
+      originalCovariance = 1;
       /////Prediction step ///////
       predictedThetaValue = initialThetaValue;
       //updatedCovariance = initialEstimateUncertainity;
       initializationFlag = 0;
       } 
-    if (!Serial3.available()){
-      originalKalmanGain=0;
+
+
+   if ( initializationFlag == 1 ){
+      initialThetaValue = originalTheta;
+      //initialThetaValue = 0;
+      originalCovariance = 0.1;
+      /////Prediction step ///////
+      predictedThetaValue = initialThetaValue;
+      //updatedCovariance = initialEstimateUncertainity;
+      initializationFlag = 0;
+      } 
+
+      
+///////// code in case the imu sensor is thrown away /////  
+   if (!Serial3.available()){
+      originalKalmanGain=1;
       predictedThetaValue = originalTheta;
+      Serial.println("Switched to Encoder Navigation");
       }
+//////////////////////////////////////////////////////////      
+
     //// Step 1 Measurement //////// runs like a loop
-    originalMeasurement = originalTheta;
-    originalMeasurementError = 0.1;
+    originalMeasurement = totalIMUTheta;
+    originalMeasurementError = 0.01;
     //// Step 2 Update ////////////
     originalKalmanGain =  originalCovariance /(originalCovariance + originalMeasurementError);
     //// Step 3 Estimate //////////
     estimatedThetaValue = predictedThetaValue + (originalKalmanGain*(originalMeasurement - predictedThetaValue));
     updatedCovariance = (1-originalKalmanGain)*originalCovariance;
-    //Serial.println(feedbackFromIMU);
-    //Serial.print(" , ");
-    //Serial.print(estimatedThetaValue);
+    //Serial.println(originalKalmanGain);
+    //Serial.print(",");
+    //Serial.println(estimatedThetaValue);
+    //Serial.print(totalIMUTheta);
+    //Serial.println(originalKalmanGain);
     //// Step 4 Predict ///////////
-    predictedThetaValue = estimatedThetaValue;
+    predictedThetaValue  = estimatedThetaValue;
     originalCovariance = updatedCovariance;
+  }*/
+
+void weightedFilter(){
+    ///// fuse the readings of both sensors ////
+    //setpoint//
+    filterSetPoint = 0;
+    //sensor priority//
+    alpha1 = 0.1; /// lesser the value, more priority to encoders
+    alpha2 = 0.2;
+    alpha3 = 0.5;
+    alpha4 = 0.99;
+    //filter//
+    complimentaryMeasurement1 = originalTheta; 
+    complimentaryMeasurement2 = totalIMUTheta;
+    if ( abs(originalTheta - totalIMUTheta) >0.1 && abs(originalTheta - totalIMUTheta) <2 ){filterValue = alpha1;Serial.println("Low Slippage");}
+    if ( abs(originalTheta - totalIMUTheta) >2 && abs(originalTheta - totalIMUTheta) <10 ){filterValue = alpha2;Serial.println("Moderate Slippage");}
+    if ( abs(originalTheta - totalIMUTheta) >10 && abs(originalTheta - totalIMUTheta) <15 ){filterValue = alpha3;Serial.println("High Slippage");}
+    if ( abs(originalTheta - totalIMUTheta) >15 ){filterValue = alpha4;Serial.println("Odometry Lost");}
+    filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUTheta);
+/*  Serial.print(",");
+    Serial.println(originalTheta);
+    Serial.print(totalIMUTheta);
+    Serial.print(",");
+    Serial.print(filteredTheta);*/
+  }
+
+void slipDetection(){
+    /// condition 1 : when there is a change in pitch 
+/*  if (abs(originalTheta - totalIMUTheta)>2){
+     originalKalmanGain = 0;
+      predictedThetaValue = totalIMUTheta; 
+      Serial.println("Switched to IMU Navigation");
+    }*/
+    /// condition 2 : when there is a difference between the wheels
+      
+    /// condition 3 : 
   }
