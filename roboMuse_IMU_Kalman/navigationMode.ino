@@ -2,7 +2,6 @@ float angleFromIMU = 0;
 float angleFromIMUYAW =0;
 float angleFromIMUPITCH =0;
 float angleFromIMUROLL = 0;
-float angleFromIMUInRadians = 0;
 float angleFromIMUYAWInRadians = 0;
 float angleFromIMUPITCHInRadians = 0;
 float angleFromIMUROLLInRadians = 0;
@@ -47,29 +46,24 @@ float filterValue =0;
 float filteredTheta = 0;
 
 ///////////////////////////////////////
+////// Differentiation function variables ////////
+int timeholder1, timeholder 2= 0;
+
+////////////////////////////////////////////////
+
+
 void navigationMode() {
   while (abs(x) <= 8000 && interApt == 100) {
     //speedRamp(1,40);
     startIMUReading(0);
-    //readOnce();
     //Serial.println(initialValue);
-    /*while (!Serial3.available()){
-      Serial.println ("waiting");
-      }*/
     if (Serial3.available()){
       angleFromIMUYAW=Serial3.parseFloat();
       angleFromIMUPITCH=Serial3.parseFloat();
       angleFromIMUROLL=Serial3.parseFloat();
-      //angleFromIMUInRadians = angleFromIMUYAW;
       angleFromIMUYAWInRadians = angleFromIMUYAW * (M_PI/180); 
       angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
       angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
-      //Serial.println(angleFromIMUInRadians);
-      //Serial.println(offsetAngle);
-      //Serial.println(angleFromIMUROLL);
-      //Serial.println(angleFromIMUROLL);
-      //Serial.println(originalTheta);
-      //Serial.println(angleFromIMUYAW);
       readOnce();
       }
     //Serial.println("Im here");
@@ -104,7 +98,7 @@ void navigationMode() {
     //Serial.print(-1.0);
     //input = (feedbackFromIMU);
 ///////////////////////////////////////////////////////    
-//    newKalmanFilter();
+//  newKalmanFilter();
     slipDetection();
     //input = originalTheta;
     input = estimatedThetaValue;
