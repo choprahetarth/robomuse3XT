@@ -77,8 +77,8 @@ void navigationMode() {
     //Serial.println(leftMotorSpeed);
     //Serial.println(rightMotorSpeed);
     //Serial.println(rampOutput);
-    leftMotorSpeed = 20;
-    rightMotorSpeed = 20;
+    leftMotorSpeed = 40;
+    rightMotorSpeed = 40;
     odometryCalc();
     errorDifference();
     setpoint = 0;
@@ -219,6 +219,7 @@ void weightedFilter(){
     if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ) {filterValue = alpha3;Serial.println("High Slippage")    ;}
     if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;Serial.println("Odometry Lost")    ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
+    Serial.println(filteredTheta);
 /*  Serial.print(",");
     Serial.println(originalTheta);
     Serial.print(totalIMUYAW);
@@ -233,7 +234,7 @@ void slipDetection(){
       predictedThetaValue = totalIMUYAW        /; 
       Serial.println("Switched to IMU Navigation");
     }*/
-        //singleDifferentiation();
+        singleDifferentiation();
     /// condition 2 : when there is a difference between the wheels
         //weightedFilter();
     /// condition 3 : when the actual odometries dont match 
@@ -251,5 +252,4 @@ void singleDifferentiation(){
   if (derivativeDeltaRoll>0.1 || derivativeDeltaRoll < (-0.1)){
     Serial.println("SlipDetected");
     }
-  
   }
