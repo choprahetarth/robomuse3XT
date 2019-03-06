@@ -207,32 +207,26 @@ void weightedFilter(){
     //setpoint//
     filterSetPoint = 0;
     //sensor priority//
-    alpha1 = 0.1; /// lesser the value, more priority to encoders
-    alpha2 = 0.2;
-    alpha3 = 0.5;
-    alpha4 = 0.99;
-    alphaQ = 1*((originalTheta-totalIMUYAW)/(15));
+    alpha4 = 1;// complete priority
+    alphaQ = 1*((abs(originalTheta-totalIMUYAW)/(abs(originalTheta-totalIMUYAW)+5)));// lesser the value of the alpha, more priority to IMU
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = totalIMUYAW;
-    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <2 ) {filterValue = alpha1;Serial.println("Low Slippage")     ;}
-    else if ( abs(originalTheta - totalIMUYAW) >2 && abs(originalTheta - totalIMUYAW) <10 )  {filterValue = alpha2;Serial.println("Moderate Slippage");}
-    else if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ) {filterValue = alpha3;Serial.println("High Slippage")    ;}
-    else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;Serial.println("Odometry Lost")    ;}
+    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <15)      {filterValue = alphaQ;/*Serial.println("Low Slippage")*/     ;}
+    else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;/*Serial.println("Odometry Lost")*/    ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
-    Serial.println(filteredTheta);
-/*  Serial.print(",");
+    Serial.print(",");
     Serial.println(originalTheta);
     Serial.print(totalIMUYAW);
     Serial.print(",");
-    Serial.print(filteredTheta);*/
+    Serial.print(filteredTheta);
   }
 
 void slipDetection(){
     /// condition 1 : when there is a change in pitch  
-        singleDifferentiation();
+        //singleDifferentiation();
     /// condition 2 : when there is a difference between the wheels
-        //weightedFilter();
+        weightedFilter();
     /// condition 3 : when the actual odometries dont match 
   }
 
