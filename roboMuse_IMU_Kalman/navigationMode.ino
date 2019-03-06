@@ -47,7 +47,9 @@ float filteredTheta = 0;
 
 ///////////////////////////////////////
 ////// Differentiation function variables ////////
-unsigned long timeholder1, timeholder2 = 0;
+unsigned long timeholder1 =0,  timeholder2=0;
+unsigned long timeDiff=0;
+double derivativeDeltaRoll = 0;
 
 ////////////////////////////////////////////////
 
@@ -65,7 +67,6 @@ void navigationMode() {
       angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
       angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
       readOnce();
-      timeholder1=micros();
       }
     //Serial.println("Im here");
     safeCheck();
@@ -81,7 +82,6 @@ void navigationMode() {
     odometryCalc();
     errorDifference();
     setpoint = 0;
-    Serial.println(timeholder1);
 ///////////imu angle increment////////////////////////
     newFeedbackFromIMU = (((angleFromIMUYAWInRadians)*(-1)*(180/M_PI)))+offsetAngleYAW;
     deltaIMUTheta = newFeedbackFromIMU - oldFeedbackFromIMU;
@@ -95,14 +95,15 @@ void navigationMode() {
     totalIMURollTheta = totalIMURollTheta + deltaIMUROLLTheta;
     oldRollFromIMU = newRollFromIMU;
     //Serial.print(",");
-    //Serial.println(totalIMURollTheta);
+    //Serial.println(deltaIMUROLLTheta);
     //Serial.print(-1.0);
-    //input = (feedbackFromIMU);
 ///////////////////////////////////////////////////////    
 //  newKalmanFilter();
+//  input = (feedbackFromIMU);
     slipDetection();
     //input = originalTheta;
-    input = estimatedThetaValue;
+    //input = estimatedThetaValue;
+    input = filteredTheta;
     PID_L.Compute(); PID_R.Compute();
     leftMotorSpeed += outputL;
     rightMotorSpeed -= outputR;
@@ -213,10 +214,10 @@ void weightedFilter(){
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = totalIMUYAW;
-    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <2 ){filterValue = alpha1;Serial.println("Low Slippage");}
-    if ( abs(originalTheta - totalIMUYAW) >2 && abs(originalTheta - totalIMUYAW) <10 ){filterValue = alpha2;Serial.println("Moderate Slippage");}
-    if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ){filterValue = alpha3;Serial.println("High Slippage");}
-    if ( abs(originalTheta - totalIMUYAW) >15 ){filterValue = alpha4;Serial.println("Odometry Lost");}
+    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <2 ) {filterValue = alpha1;Serial.println("Low Slippage")     ;}
+    if ( abs(originalTheta - totalIMUYAW) >2 && abs(originalTheta - totalIMUYAW) <10 )  {filterValue = alpha2;Serial.println("Moderate Slippage");}
+    if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ) {filterValue = alpha3;Serial.println("High Slippage")    ;}
+    if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;Serial.println("Odometry Lost")    ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
 /*  Serial.print(",");
     Serial.println(originalTheta);
@@ -232,13 +233,23 @@ void slipDetection(){
       predictedThetaValue = totalIMUYAW        /; 
       Serial.println("Switched to IMU Navigation");
     }*/
+        //singleDifferentiation();
     /// condition 2 : when there is a difference between the wheels
         //weightedFilter();
     /// condition 3 : when the actual odometries dont match 
   }
 
 void singleDifferentiation(){
-  
-  
+  timeholder1=millis();
+  delay(1);
+  timeholder2=millis();
+  timeDiff = timeholder2-timeholder1;
+  derivativeDeltaRoll =  deltaIMUROLLTheta / (timeDiff);
+  /*Serial.print(",");
+  Serial.println(derivativeDeltaRoll);
+  Serial.print(0.1);*/
+  if (derivativeDeltaRoll>0.1 || derivativeDeltaRoll < (-0.1)){
+    Serial.println("SlipDetected");
+    }
   
   }
