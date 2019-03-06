@@ -40,7 +40,7 @@ int counterAddition = 0;
 ////// Weighted Filter Variables //////
 
 float filterSetPoint = 0;
-float alpha1 , alpha2, alpha3 , alpha4 =0;
+float alpha1 , alpha2, alpha3 , alpha4, alphaQ =0;
 float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
 float filterValue =0;
 float filteredTheta = 0;
@@ -211,13 +211,14 @@ void weightedFilter(){
     alpha2 = 0.2;
     alpha3 = 0.5;
     alpha4 = 0.99;
+    alphaQ = 1*((originalTheta-totalIMUYAW)/(15));
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = totalIMUYAW;
     if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <2 ) {filterValue = alpha1;Serial.println("Low Slippage")     ;}
-    if ( abs(originalTheta - totalIMUYAW) >2 && abs(originalTheta - totalIMUYAW) <10 )  {filterValue = alpha2;Serial.println("Moderate Slippage");}
-    if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ) {filterValue = alpha3;Serial.println("High Slippage")    ;}
-    if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;Serial.println("Odometry Lost")    ;}
+    else if ( abs(originalTheta - totalIMUYAW) >2 && abs(originalTheta - totalIMUYAW) <10 )  {filterValue = alpha2;Serial.println("Moderate Slippage");}
+    else if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ) {filterValue = alpha3;Serial.println("High Slippage")    ;}
+    else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;Serial.println("Odometry Lost")    ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
     Serial.println(filteredTheta);
 /*  Serial.print(",");
@@ -247,4 +248,4 @@ void singleDifferentiation(){
   if (derivativeDeltaRoll>0.1 || derivativeDeltaRoll < (-0.1)){
     Serial.println("SlipDetected");
     }
-  }
+}
