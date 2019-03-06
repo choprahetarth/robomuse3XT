@@ -13,14 +13,15 @@ int readOnceVariable = 1;
 float diffEncIMU = 0.0;
 float feedbackFromIMU =0;
 float newFeedbackFromIMU =0;
-//float totalIMUTheta =30;
-float totalIMUTheta = 0;
+//float totalIMUYAW =30;
+float totalIMUYAW = 0;
 float deltaIMUTheta =0;
 float oldFeedbackFromIMU = 0;
 float newRollFromIMU = 0;
 float deltaIMUROLLTheta =0;
 float oldRollFromIMU =0;
 float totalIMURollTheta =0;
+
 ////// Kalman Filter Variables ////////
 
 int timeHolder = 0;
@@ -84,31 +85,25 @@ void navigationMode() {
     errorDifference();
     setpoint = 0;
     
-    /// imu angle increment //////
-    
+///////////imu angle increment////////////////////////
     newFeedbackFromIMU = (((angleFromIMUYAWInRadians)*(-1)*(180/M_PI)))+offsetAngleYAW;
     deltaIMUTheta = newFeedbackFromIMU - oldFeedbackFromIMU;
-    totalIMUTheta = (totalIMUTheta + deltaIMUTheta);
+    totalIMUYAW = (totalIMUYAW + deltaIMUTheta);
     oldFeedbackFromIMU = newFeedbackFromIMU;
-    //Serial.println (totalIMUTheta);
-    
-    //// imu angle increment/////
-
-
-    /// imu roll increment ///
-
+    //Serial.println (totalIMUYAW);
+//////////////////////////////////////////////////////
+//////////////// imu roll increment //////////////////
     newRollFromIMU = (angleFromIMUROLLInRadians)*(180/M_PI);
     deltaIMUROLLTheta = newRollFromIMU - oldRollFromIMU;
     totalIMURollTheta = totalIMURollTheta + deltaIMUROLLTheta;
     oldRollFromIMU = newRollFromIMU;
     //Serial.print(",");
-    //Serial.println(totalIMURollTheta);
+    Serial.println(totalIMURollTheta);
     //Serial.print(-1.0);
     //input = (feedbackFromIMU);
-    
+///////////////////////////////////////////////////////    
 //    newKalmanFilter();
     slipDetection();
-    weightedFilter();
     //input = originalTheta;
     input = estimatedThetaValue;
     PID_L.Compute(); PID_R.Compute();
@@ -132,7 +127,6 @@ void speedRamp(float powerOfFunction, float speedValue){
       ramp = ramp + (pow(dRamp,powerOfFunction));
       rampOutput = ramp*speedValue;
       //Serial.println(rampOutput);
-      return rampOutput;
     }
 }
 
@@ -193,7 +187,7 @@ void errorDifference(){
 //////////////////////////////////////////////////////////      
 
     //// Step 1 Measurement //////// runs like a loop
-    originalMeasurement = totalIMUTheta;
+    originalMeasurement = totalIMUYAW;
     originalMeasurementError = 0.01;
     //// Step 2 Update ////////////
     originalKalmanGain =  originalCovariance /(originalCovariance + originalMeasurementError);
@@ -203,7 +197,7 @@ void errorDifference(){
     //Serial.println(originalKalmanGain);
     //Serial.print(",");
     //Serial.println(estimatedThetaValue);
-    //Serial.print(totalIMUTheta);
+    //Serial.print(totalIMUYAW);
     //Serial.println(originalKalmanGain);
     //// Step 4 Predict ///////////
     predictedThetaValue  = estimatedThetaValue;
@@ -221,27 +215,33 @@ void weightedFilter(){
     alpha4 = 0.99;
     //filter//
     complimentaryMeasurement1 = originalTheta; 
-    complimentaryMeasurement2 = totalIMUTheta;
-    if ( abs(originalTheta - totalIMUTheta) >0.1 && abs(originalTheta - totalIMUTheta) <2 ){filterValue = alpha1;Serial.println("Low Slippage");}
-    if ( abs(originalTheta - totalIMUTheta) >2 && abs(originalTheta - totalIMUTheta) <10 ){filterValue = alpha2;Serial.println("Moderate Slippage");}
-    if ( abs(originalTheta - totalIMUTheta) >10 && abs(originalTheta - totalIMUTheta) <15 ){filterValue = alpha3;Serial.println("High Slippage");}
-    if ( abs(originalTheta - totalIMUTheta) >15 ){filterValue = alpha4;Serial.println("Odometry Lost");}
-    filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUTheta);
+    complimentaryMeasurement2 = totalIMUYAW;
+    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <2 ){filterValue = alpha1;Serial.println("Low Slippage");}
+    if ( abs(originalTheta - totalIMUYAW) >2 && abs(originalTheta - totalIMUYAW) <10 ){filterValue = alpha2;Serial.println("Moderate Slippage");}
+    if ( abs(originalTheta - totalIMUYAW) >10 && abs(originalTheta - totalIMUYAW) <15 ){filterValue = alpha3;Serial.println("High Slippage");}
+    if ( abs(originalTheta - totalIMUYAW) >15 ){filterValue = alpha4;Serial.println("Odometry Lost");}
+    filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
 /*  Serial.print(",");
     Serial.println(originalTheta);
-    Serial.print(totalIMUTheta);
+    Serial.print(totalIMUYAW);
     Serial.print(",");
     Serial.print(filteredTheta);*/
   }
 
 void slipDetection(){
-    /// condition 1 : when there is a change in pitch 
-/*  if (abs(originalTheta - totalIMUTheta)>2){
+    /// condition 1 : when there is a change in pitch  
+/*  if (abs(originalTheta - totalIMUYAW)>2){
      originalKalmanGain = 0;
-      predictedThetaValue = totalIMUTheta; 
+      predictedThetaValue = totalIMUYAW        /; 
       Serial.println("Switched to IMU Navigation");
     }*/
     /// condition 2 : when there is a difference between the wheels
-      
-    /// condition 3 : 
+        //weightedFilter();
+    /// condition 3 : when the actual odometries dont match 
+  }
+
+void singleDifferentiation(){
+  
+  
+  
   }
