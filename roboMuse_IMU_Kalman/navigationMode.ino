@@ -229,11 +229,6 @@ void weightedFilter(){
 
 void slipDetection(){
     /// condition 1 : when there is a change in pitch  
-/*  if (abs(originalTheta - totalIMUYAW)>2){
-     originalKalmanGain = 0;
-      predictedThetaValue = totalIMUYAW        /; 
-      Serial.println("Switched to IMU Navigation");
-    }*/
         singleDifferentiation();
     /// condition 2 : when there is a difference between the wheels
         //weightedFilter();
@@ -246,9 +241,9 @@ void singleDifferentiation(){
   timeholder2=millis();
   timeDiff = timeholder2-timeholder1;
   derivativeDeltaRoll =  deltaIMUROLLTheta / (timeDiff);
-  /*Serial.print(",");
-  Serial.println(derivativeDeltaRoll);
-  Serial.print(0.1);*/
+  //Serial.print(",");
+  //Serial.println(derivativeDeltaRoll);
+  //Serial.print(0.1);
   if (derivativeDeltaRoll>0.1 || derivativeDeltaRoll < (-0.1)){
     Serial.println("SlipDetected");
     }
