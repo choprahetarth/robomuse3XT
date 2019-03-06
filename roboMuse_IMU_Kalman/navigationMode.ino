@@ -47,7 +47,7 @@ float filteredTheta = 0;
 
 ///////////////////////////////////////
 ////// Differentiation function variables ////////
-int timeholder1, timeholder 2= 0;
+unsigned long timeholder1, timeholder2 = 0;
 
 ////////////////////////////////////////////////
 
@@ -65,6 +65,7 @@ void navigationMode() {
       angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
       angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
       readOnce();
+      timeholder1=micros();
       }
     //Serial.println("Im here");
     safeCheck();
@@ -80,7 +81,7 @@ void navigationMode() {
     odometryCalc();
     errorDifference();
     setpoint = 0;
-    
+    Serial.println(timeholder1);
 ///////////imu angle increment////////////////////////
     newFeedbackFromIMU = (((angleFromIMUYAWInRadians)*(-1)*(180/M_PI)))+offsetAngleYAW;
     deltaIMUTheta = newFeedbackFromIMU - oldFeedbackFromIMU;
@@ -94,7 +95,7 @@ void navigationMode() {
     totalIMURollTheta = totalIMURollTheta + deltaIMUROLLTheta;
     oldRollFromIMU = newRollFromIMU;
     //Serial.print(",");
-    Serial.println(totalIMURollTheta);
+    //Serial.println(totalIMURollTheta);
     //Serial.print(-1.0);
     //input = (feedbackFromIMU);
 ///////////////////////////////////////////////////////    
