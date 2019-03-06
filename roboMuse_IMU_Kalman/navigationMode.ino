@@ -39,11 +39,13 @@ int counterAddition = 0;
 
 ///////////////////////////////////////
 ////// Weighted Filter Variables //////
+
 float filterSetPoint = 0;
 float alpha1 , alpha2, alpha3 , alpha4 =0;
 float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
 float filterValue =0;
 float filteredTheta = 0;
+
 ///////////////////////////////////////
 void navigationMode() {
   while (abs(x) <= 8000 && interApt == 100) {
