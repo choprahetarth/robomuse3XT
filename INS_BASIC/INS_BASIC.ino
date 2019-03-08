@@ -55,11 +55,12 @@ int time;
 int timeholder1, timeholder2 =0;
 int dt = 0;
 int i, counter =0;
-float newAcceleration, oldAcceleration, deltaAcceleration, totalVelocity = 0 ,average= 0 ;
+float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0 ;
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX;
 float alpha =0.1;
 float setpointAccelerationX ,filteredAccelX =0;
+int accelerationSetpoint = 0;
 
 void orientationAngleCalculation(){
   currentYaw = ypr[0] * 180/M_PI;
@@ -90,14 +91,23 @@ void orientationAngleCalculation(){
     //Serial.println(accelZ);
   }
 
-  void staticFilter(){
+  void emaFilter(){
     counter++;
-      //if (counter % 100 == 0){
+     /* //if (counter % 100 == 0){
          //setpointAccelerationX = averageAccelX;
          //Serial.println(counter);
         //}
+
+      /////STATIC FILTER//////  
       setpointAccelerationX = 0;
       filteredAccelX = (1-alpha)*setpointAccelerationX + alpha*(averageAccelX);
+      if (abs(filteredAccelX)<1){
+        filteredAccelX = 0;
+        }
+       /////////////////////// 
+      */ 
+      newAccelX = averageAccelX;  
+      filteredAccelX = (1-alpha)*filteredAccelX + alpha*newAccelX; ////ema filter
       Serial.print(",");
       Serial.println(filteredAccelX);
       Serial.print(averageAccelX);
@@ -107,18 +117,36 @@ void orientationAngleCalculation(){
     }
 
   void velocityCalculation(){
+    
+    if (filteredAccelX == 0){
+      accelerationSetpoint = 1;
+      }
+    
+    if (accelerationSetpoint == 1){
     timeholder1 = millis();
     delay(2);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
     newAcceleration = filteredAccelX;
     //Serial.println(newVelocity);
-    deltaAcceleration = newAcceleration - oldAcceleration;
-    totalVelocity = totalVelocity + (deltaAcceleration*dt);
+    //////////////////////////////////////////////////////////////
+    deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
+    newVelocity = oldVelocity + (deltaAcceleration*dt);
+    deltaVelocity = newVelocity - oldVelocity;
+    //////////////////////////////////////////////////////////////
+    newPosition = oldPosition + (deltaVelocity*dt) + (0.5*deltaAcceleration*dt*dt); 
+    //////////////////////////////////////////////////////////////
     oldAcceleration = newAcceleration;
-   /* Serial.print(",");
-    Serial.println(totalVelocity);
-    Serial.print(filteredAccelX);   */   
+    oldVelocity = newVelocity;
+    oldPosition = newPosition;
+    /////////////////////////////////
+    //Serial.print(",");
+    //Serial.println(deltaVelocity);
+    //Serial.print(filteredAccelX);
+    /*Serial.print(",");
+    Serial.print(newPosition);*/
+      }
+
     }
 
 /*  void positionCalculation(){
@@ -229,6 +257,7 @@ void setup() {
     pinMode(8,INPUT);
 }
 
+
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
@@ -299,7 +328,7 @@ void loop() {
             mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             orientationAccelerationWorldCalculation();
-            staticFilter();
+            emaFilter();
             velocityCalculation();
             //positionCalculation();
         #endif
