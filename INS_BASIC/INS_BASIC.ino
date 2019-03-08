@@ -58,8 +58,8 @@ int i, counter =0;
 float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0 ;
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX;
-float alpha =0.1;
-float setpointAccelerationX ,filteredAccelX =0;
+float alpha =0.1, alpha2 = 0.13;
+float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0, bandpassAccelX = 0;
 int accelerationSetpoint = 0;
 
 void orientationAngleCalculation(){
@@ -100,17 +100,22 @@ void orientationAngleCalculation(){
 
       /////STATIC FILTER//////  
       setpointAccelerationX = 0;
-      filteredAccelX = (1-alpha)*setpointAccelerationX + alpha*(averageAccelX);
-      if (abs(filteredAccelX)<1){
-        filteredAccelX = 0;
+      filteredAccelXLow = (1-alpha)*setpointAccelerationX + alpha*(averageAccelX);
+      if (abs(filteredAccelXLow)<1){
+        filteredAccelXLow = 0;
         }
        /////////////////////// 
       */ 
+      
       newAccelX = averageAccelX;  
-      filteredAccelX = (1-alpha)*filteredAccelX + alpha*newAccelX; ////ema filter
+      filteredAccelXLow = (1-alpha)*filteredAccelXLow + alpha*newAccelX; ////ema lowpass filter
+      filteredAccelXHigh = (1-alpha2)*filteredAccelXHigh + alpha2*newAccelX; /// ema highpass filter
+      bandpassAccelX = filteredAccelXHigh - filteredAccelXLow;
       Serial.print(",");
-      Serial.println(filteredAccelX);
+      Serial.println(bandpassAccelX);
       Serial.print(averageAccelX);
+      //Serial.print(",");
+      //Serial.print(filteredAccelXLow);
       //Serial.print(",");
       //Serial.print(accelX);
       //Serial.println(time);
@@ -118,7 +123,7 @@ void orientationAngleCalculation(){
 
   void velocityCalculation(){
     
-    if (filteredAccelX == 0){
+    if (filteredAccelXLow == 0){
       accelerationSetpoint = 1;
       }
     
@@ -127,7 +132,7 @@ void orientationAngleCalculation(){
     delay(2);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
-    newAcceleration = filteredAccelX;
+    newAcceleration = filteredAccelXLow;
     //Serial.println(newVelocity);
     //////////////////////////////////////////////////////////////
     deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
@@ -142,7 +147,7 @@ void orientationAngleCalculation(){
     /////////////////////////////////
     //Serial.print(",");
     //Serial.println(deltaVelocity);
-    //Serial.print(filteredAccelX);
+    //Serial.print(filteredAccelXLow);
     /*Serial.print(",");
     Serial.print(newPosition);*/
       }
