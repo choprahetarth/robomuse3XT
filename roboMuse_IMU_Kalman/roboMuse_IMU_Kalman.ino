@@ -58,6 +58,8 @@ double input = 0.00, setpoint = 0.00; // Input_Error_value, Controler_Output_val
 //double KpR = 40, KiR = 3, KdR = 0, outputR = 0;  // of respective motors for PID control
 double KpL = 2, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
 double KpR = 2, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
+//double KpL = 1, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+//double KpR = 1, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
 
 Sabertooth saberTooth(128, Serial2);  // Packetized serial mode, Non-LI, 128 bit Addr. (0,0,1,1,1,1)
 Encoder enCoder_1(20, 21); // Left hand side enc., +ve value means forward
@@ -179,7 +181,7 @@ void loop() {
   //Serial.println("Please choose the mode of operation -");
   //Serial.println("\t m = Manual,\n\t a = Autonomous,\n\t n = Navigation.");
   //while (!Serial.available()) {
-    // Wait.
+     //Wait.
   //}
   interApt=100;
   //modeSelected = Serial.readString();
