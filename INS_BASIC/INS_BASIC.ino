@@ -229,9 +229,6 @@ void setup() {
     pinMode(8,INPUT);
 }
 
-int gsivaych=0;
-int gsivaychHolder =0;
-unsigned long millis1=0;
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
