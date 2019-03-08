@@ -28,7 +28,8 @@ uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[64]; // FIFO storage buffer
+uint8_t fifoBuffer[512]; // FIFO storage buffer
+//uint8_t fifoBuffer[64]; // FIFO storage buffer
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
 
@@ -54,8 +55,8 @@ int time;
 int timeholder1, timeholder2 =0;
 int dt = 0;
 int i, counter =0;
-int newVelocity, oldVelocity, deltaVelocity, totalVelocity = 0 ,average= 0 ;
-int newPosition, oldPosition, deltaPosition, totalPosition = 0;
+float newAcceleration, oldAcceleration, deltaAcceleration, totalVelocity = 0 ,average= 0 ;
+float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX;
 float alpha =0.1;
 float setpointAccelerationX ,filteredAccelX =0;
@@ -64,7 +65,7 @@ void orientationAngleCalculation(){
   currentYaw = ypr[0] * 180/M_PI;
   currentPitch = ypr[1] * 180/M_PI;
   currentRoll = ypr[2] * 180/M_PI;
-  delay(0);
+  //delay(10);
   buttonState = digitalRead(8);
   //Serial.println (buttonState);
   if (buttonState == 0){
@@ -97,11 +98,11 @@ void orientationAngleCalculation(){
         //}
       setpointAccelerationX = 0;
       filteredAccelX = (1-alpha)*setpointAccelerationX + alpha*(averageAccelX);
-      /*Serial.print(",");
+      Serial.print(",");
       Serial.println(filteredAccelX);
       Serial.print(averageAccelX);
-      Serial.print(",");
-      Serial.print(accelX);*/
+      //Serial.print(",");
+      //Serial.print(accelX);
       //Serial.println(time);
     }
 
@@ -110,24 +111,25 @@ void orientationAngleCalculation(){
     delay(2);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
-    newVelocity = filteredAccelX*dt;
+    newAcceleration = filteredAccelX;
     //Serial.println(newVelocity);
-    deltaVelocity = newVelocity - oldVelocity;
-    totalVelocity = totalVelocity + deltaVelocity;
-    oldVelocity = newVelocity;
-    //Serial.println(totalVelocity);      
+    deltaAcceleration = newAcceleration - oldAcceleration;
+    totalVelocity = totalVelocity + (deltaAcceleration*dt);
+    oldAcceleration = newAcceleration;
+   /* Serial.print(",");
+    Serial.println(totalVelocity);
+    Serial.print(filteredAccelX);   */   
     }
 
-  void positionCalculation(){
+/*  void positionCalculation(){
     timeholder1 = millis();
-    delay(2);
+    delay(1);
     timeholder2 = millis();
-    newPosition = totalVelocity * dt;
+    newPosition = abs(totalVelocity*dt);
     deltaPosition = newPosition - oldPosition;
     totalPosition = totalPosition + deltaPosition;
-    Serial.println(totalPosition);
     oldPosition = newPosition;
-    }
+    }*/
 
     
 // ================================================================
@@ -227,8 +229,9 @@ void setup() {
     pinMode(8,INPUT);
 }
 
-
-
+int gsivaych=0;
+int gsivaychHolder =0;
+unsigned long millis1=0;
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
@@ -322,25 +325,6 @@ void loop() {
         // blink LED to indicate activity
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);
+
     }
 }
-
-//Sender Code
-
-/*
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println("Please wait 10sec");
-  delay(100);
-}
-
-void loop() {
-//  while(!Serial.available()){
-    // wait
-//  }
-  int value=-185;
-  delay(10);//this would be much more exciting if it was a sensor value
-  Serial.print(value);
-}
-*/
