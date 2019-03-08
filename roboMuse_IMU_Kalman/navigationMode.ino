@@ -77,8 +77,8 @@ void navigationMode() {
     //Serial.println(leftMotorSpeed);
     //Serial.println(rightMotorSpeed);
     //Serial.println(rampOutput);
-    leftMotorSpeed = 40;
-    rightMotorSpeed = 40;
+    leftMotorSpeed = 30;
+    rightMotorSpeed = 30;
     odometryCalc();
     errorDifference();
     setpoint = 0;
@@ -87,6 +87,7 @@ void navigationMode() {
     deltaIMUTheta = newFeedbackFromIMU - oldFeedbackFromIMU;
     totalIMUYAW = (totalIMUYAW + deltaIMUTheta);
     oldFeedbackFromIMU = newFeedbackFromIMU;
+    //Serial.println (offsetAngleYAW);
     //Serial.println (totalIMUYAW);
 //////////////////////////////////////////////////////
 //////////////// imu roll increment //////////////////
@@ -212,8 +213,8 @@ void weightedFilter(){
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = totalIMUYAW;
-    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <15)      {filterValue = alphaQ;/*Serial.println("Low Slippage")*/     ;}
-    else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4;/*Serial.println("Odometry Lost")*/    ;}
+    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <15)      {filterValue = alphaQ; /*Serial.println("Low Slippage")*/    ;}
+    else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
     Serial.print(",");
     Serial.println(originalTheta);
@@ -228,6 +229,7 @@ void slipDetection(){
     /// condition 2 : when there is a difference between the wheels
         weightedFilter();
     /// condition 3 : when the actual odometries dont match 
+        // insert the INS Function once it is completed
   }
 
 void singleDifferentiation(){
