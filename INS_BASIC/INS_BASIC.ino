@@ -71,6 +71,7 @@ float bandpassFilter(float sensorReadings, float alphaLow, float alphaHigh){
       bandpassValue = filteredHigh - filteredLow;
       //Serial.println(bandpassValue);
       return bandpassValue;
+      //return filteredLow;
   }
 
 void orientationAngleCalculation(){
@@ -119,13 +120,6 @@ void orientationAngleCalculation(){
         }
        /////////////////////// 
       */ 
-      
-      ///////// BANDPASS FILTER ///////////  // converted it to a functin
-     /* newAccelX = averageAccelX;
-      filteredAccelXLow = (1-alpha)*filteredAccelXLow + alpha*newAccelX; ////ema lowpass filter
-      filteredAccelXHigh = (1-alpha2)*filteredAccelXHigh + alpha2*newAccelX; /// ema highpass filter
-      bandpassAccelX = filteredAccelXHigh - filteredAccelXLow;*/
-      /////////////////////////////////////
       //Serial.print(",");
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1,0.13);
       //Serial.println(bandpassAccelX);
@@ -142,33 +136,6 @@ void orientationAngleCalculation(){
     if (abs(bandpassAccelX) < 0.02){
       accelerationSetpoint = 1;
       }
-///////////////// code to be used with filteredAccelXLow lowpass filter ////////////////////////
-
-    /*if (accelerationSetpoint == 1){
-    timeholder1 = millis();
-    delay(2);
-    timeholder2 = millis();
-    dt = timeholder2 - timeholder1;
-    newAcceleration = filteredAccelXLow;
-    //Serial.println(newVelocity);
-    //////////////////////////////////////////////////////////////
-    deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
-    newVelocity = oldVelocity + (deltaAcceleration*dt);
-    deltaVelocity = newVelocity - oldVelocity;
-    //////////////////////////////////////////////////////////////
-    newPosition = oldPosition + (deltaVelocity*dt) + (0.5*deltaAcceleration*dt*dt); 
-    //////////////////////////////////////////////////////////////
-    oldAcceleration = newAcceleration;
-    oldVelocity = newVelocity;
-    oldPosition = newPosition;
-    /////////////////////////////////
-    //Serial.print(",");
-    //Serial.println(deltaVelocity);
-    //Serial.print(filteredAccelXLow);
-    //Serial.print(",");
-    //Serial.print(newPosition);*/
-
-//////////////////////////////////////////////////////////////////////////////
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
    if (accelerationSetpoint == 1){
@@ -185,6 +152,7 @@ void orientationAngleCalculation(){
     deltaVelocity = newVelocity - oldVelocity;
     //////////////////////////////////////////////////////////////
     bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05 , 0.1);
+    //bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
     tValue = 1;
     rValue = 0.2;
     decayFactor = pow(rValue,tValue-abs(bandpassVelocityX));
@@ -192,7 +160,11 @@ void orientationAngleCalculation(){
       bandpassVelocityX = bandpassVelocityX*decayFactor;
       }
     //////////////////////////////////////////////////////////////
-    newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
+    //if (time> 10000){
+      newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
+      //newPosition = newPosition + (bandpassVelocityX*dt);
+      deltaPosition = newPosition - oldPosition;
+      //}
     //////////////////////////////////////////////////////////////
     oldAcceleration = newAcceleration;
     oldVelocity = newVelocity;
@@ -200,10 +172,10 @@ void orientationAngleCalculation(){
     /////////////////////////////////
     //Serial.print(",");
     //Serial.println(deltaVelocity);
-    //Serial.print(bandpassVelocityX);
-    //Serial.print(bandpassAccelX);
+    //Serial.println(bandpassVelocityX);
+    //Serial.println(bandpassAccelX);
     //Serial.print(",");
-    Serial.println(newPosition);
+    //Serial.println(deltaPosition);
 
 //////////////////////////////////////////////////////////
 
