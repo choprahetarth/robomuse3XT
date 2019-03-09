@@ -59,8 +59,19 @@ float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , new
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX;
 float alpha =0.1, alpha2 = 0.13;
-float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0, bandpassAccelX = 0;
+float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0, bandpassAccelX = 0, bandpassVelocityX = 0;
 int accelerationSetpoint = 0;
+
+float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0;
+
+float bandpassFilter(float sensorReadings, float alphaLow, float alphaHigh){
+      newValue = sensorReadings;
+      filteredLow = (1-alphaLow)*filteredLow + alphaLow*newValue; ////ema lowpass filter
+      filteredHigh = (1-alphaHigh)*filteredHigh + alphaHigh*newValue; /// ema highpass filter
+      bandpassValue = filteredHigh - filteredLow;
+      //Serial.println(bandpassValue);
+      return bandpassValue;
+  }
 
 void orientationAngleCalculation(){
   currentYaw = ypr[0] * 180/M_PI;
@@ -80,12 +91,14 @@ void orientationAngleCalculation(){
     accelX = aaWorld.x/10;
     accelY = aaWorld.y/10;
     accelZ = aaWorld.z;
-    for (i; i<500;i++ ){
+    for (i=0; i<500;i++ ){
       sumAccelX = sumAccelX + accelX;
       }
     averageAccelX = sumAccelX / 500;
     sumAccelX = 0;
+    //Serial.print(",");
     //Serial.println(averageAccelX);
+    //Serial.print(accelX);
     i = 0;
     //Serial.println(accelY);
     //Serial.println(accelZ);
@@ -107,13 +120,16 @@ void orientationAngleCalculation(){
        /////////////////////// 
       */ 
       
-      newAccelX = averageAccelX;  
+      ///////// BANDPASS FILTER ///////////  // converted it to a functin
+     /* newAccelX = averageAccelX;
       filteredAccelXLow = (1-alpha)*filteredAccelXLow + alpha*newAccelX; ////ema lowpass filter
       filteredAccelXHigh = (1-alpha2)*filteredAccelXHigh + alpha2*newAccelX; /// ema highpass filter
-      bandpassAccelX = filteredAccelXHigh - filteredAccelXLow;
-      Serial.print(",");
-      Serial.println(bandpassAccelX);
-      Serial.print(averageAccelX);
+      bandpassAccelX = filteredAccelXHigh - filteredAccelXLow;*/
+      /////////////////////////////////////
+      //Serial.print(",");
+      bandpassAccelX = bandpassFilter(averageAccelX, 0.1,0.13);
+      //Serial.println(bandpassAccelX);
+      //Serial.print(averageAccelX);
       //Serial.print(",");
       //Serial.print(filteredAccelXLow);
       //Serial.print(",");
@@ -123,11 +139,12 @@ void orientationAngleCalculation(){
 
   void velocityCalculation(){
     
-    if (filteredAccelXLow == 0){
+    if (abs(bandpassAccelX) < 0.02){
       accelerationSetpoint = 1;
       }
-    
-    if (accelerationSetpoint == 1){
+///////////////// code to be used with filteredAccelXLow lowpass filter ////////////////////////
+
+    /*if (accelerationSetpoint == 1){
     timeholder1 = millis();
     delay(2);
     timeholder2 = millis();
@@ -148,22 +165,74 @@ void orientationAngleCalculation(){
     //Serial.print(",");
     //Serial.println(deltaVelocity);
     //Serial.print(filteredAccelXLow);
-    /*Serial.print(",");
-    Serial.print(newPosition);*/
+    //Serial.print(",");
+    //Serial.print(newPosition);*/
+
+//////////////////////////////////////////////////////////////////////////////
+
+///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
+   if (accelerationSetpoint == 1){
+    time = millis();
+    timeholder1 = millis();
+    delay(2);
+    timeholder2 = millis();
+    dt = timeholder2 - timeholder1;
+    newAcceleration = bandpassAccelX;
+    //Serial.println(newVelocity);
+    //////////////////////////////////////////////////////////////
+    deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
+    newVelocity = oldVelocity + (deltaAcceleration*dt);
+    deltaVelocity = newVelocity - oldVelocity;
+    //////////////////////////////////////////////////////////////
+    bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05 , 0.1);
+    tValue = 1;
+    rValue = 0.2;
+    decayFactor = pow(rValue,tValue-abs(bandpassVelocityX));
+    if (abs(bandpassVelocityX) <tValue){
+      bandpassVelocityX = bandpassVelocityX*decayFactor;
+      }
+    //////////////////////////////////////////////////////////////
+    newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
+    //////////////////////////////////////////////////////////////
+    oldAcceleration = newAcceleration;
+    oldVelocity = newVelocity;
+    oldPosition = newPosition;
+    /////////////////////////////////
+    //Serial.print(",");
+    //Serial.println(deltaVelocity);
+    //Serial.print(bandpassVelocityX);
+    //Serial.print(bandpassAccelX);
+    //Serial.print(",");
+    Serial.println(newPosition);
+
+//////////////////////////////////////////////////////////
+
+/////////////code to be used for static filter ///////////
+/*float newVelocity=0, newPosition =0, sum =0;
+
+if (accelerationSetpoint == 1){
+    time = millis();
+    timeholder1 = millis();
+    delay(2);
+    timeholder2 = millis();
+    dt = timeholder2 - timeholder1;
+    newAcceleration = bandpassAccelX;
+    //Serial.println(newVelocity);
+    //////////////////////////////////////////////////////////////
+    newVelocity = newVelocity + (newAcceleration*dt);
+    //////////////////////////////////////////////////////////////
+    newPosition = newPosition + (newVelocity*dt);
+    //////////////////////////////////////////////////////////////
+    //oldAcceleration = newAcceleration;
+    //oldVelocity = newVelocity;
+    //oldPosition = newPosition;
+    //Serial.println(newPosition);*/
+    
+//////////////////////////////////////////////////////////
+   
       }
 
-    }
-
-/*  void positionCalculation(){
-    timeholder1 = millis();
-    delay(1);
-    timeholder2 = millis();
-    newPosition = abs(totalVelocity*dt);
-    deltaPosition = newPosition - oldPosition;
-    totalPosition = totalPosition + deltaPosition;
-    oldPosition = newPosition;
-    }*/
-
+  }
     
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
