@@ -127,7 +127,7 @@ void orientationAngleCalculation(){
       Serial.println(bandpassAccelX);
       Serial.print(decayedAccelX);
       Serial.print(",");
-      Serial.print(newVelocity);
+      //Serial.print(newVelocity);
       //Serial.print(",");
       //Serial.print(averageAccelX);
       //Serial.print(",");
@@ -139,7 +139,7 @@ void orientationAngleCalculation(){
    // if (abs(bandpassAccelX) < 0.02 &&  time1 > 23000){
    //   accelerationSetpoint = 1;
    //   }
-   if (abs(decayedAccelX) < 0.02){
+   if (abs(decayedAccelX) < 0.1){
       accelerationSetpoint = 1;
       }
 
@@ -150,8 +150,8 @@ void orientationAngleCalculation(){
     delay(2);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
-    //newAcceleration = bandpassAccelX;
     newAcceleration = decayedAccelX;
+    Serial.print(newAcceleration);
     //////////////////////////////////////////////////////////////
     deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
     newVelocity = oldVelocity + (deltaAcceleration*dt);
