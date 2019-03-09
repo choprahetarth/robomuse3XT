@@ -51,18 +51,18 @@ float baseLineCorrection =0;
 //static char myArray[4];
 int pinState = 0;
 int buttonState =0;
-int time;
+int time=0, time1=0;
 int timeholder1, timeholder2 =0;
 int dt = 0;
 int i, counter =0;
-float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0 ;
+float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
-float sumAccelX =0, averageAccelX;
+float sumAccelX =0, averageAccelX, decayedAccelX =0 ;
 float alpha =0.1, alpha2 = 0.13;
 float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0, bandpassAccelX = 0, bandpassVelocityX = 0;
 int accelerationSetpoint = 0;
 
-float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0;
+float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
 
 float bandpassFilter(float sensorReadings, float alphaLow, float alphaHigh){
       newValue = sensorReadings;
@@ -72,6 +72,14 @@ float bandpassFilter(float sensorReadings, float alphaLow, float alphaHigh){
       //Serial.println(bandpassValue);
       return bandpassValue;
       //return filteredLow;
+  }
+
+float decayFilter(float rawValue, float rValue, float tValue){
+    decayFactor = pow(rValue,tValue-abs(rawValue));
+    if (abs(rawValue)<tValue){
+        rawValue = rawValue * decayFactor;
+      }
+    return rawValue;
   }
 
 void orientationAngleCalculation(){
@@ -97,16 +105,10 @@ void orientationAngleCalculation(){
       }
     averageAccelX = sumAccelX / 500;
     sumAccelX = 0;
-    //Serial.print(",");
-    //Serial.println(averageAccelX);
-    //Serial.print(accelX);
     i = 0;
-    //Serial.println(accelY);
-    //Serial.println(accelZ);
   }
 
   void emaFilter(){
-    counter++;
      /* //if (counter % 100 == 0){
          //setpointAccelerationX = averageAccelX;
          //Serial.println(counter);
@@ -118,22 +120,26 @@ void orientationAngleCalculation(){
       if (abs(filteredAccelXLow)<1){
         filteredAccelXLow = 0;
         }
-       /////////////////////// 
-      */ 
+       /////////////////////// */
+      bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13);
+      decayedAccelX = decayFilter(bandpassAccelX, 0.3 , 2);
+      Serial.print(",");
+      Serial.println(bandpassAccelX);
+      Serial.print(decayedAccelX);
+      Serial.print(",");
+      Serial.print(newVelocity);
       //Serial.print(",");
-      bandpassAccelX = bandpassFilter(averageAccelX, 0.1,0.13);
-      //Serial.println(bandpassAccelX);
       //Serial.print(averageAccelX);
       //Serial.print(",");
-      //Serial.print(filteredAccelXLow);
-      //Serial.print(",");
-      //Serial.print(accelX);
-      //Serial.println(time);
+      //Serial.print(aaWorld.x);
     }
 
   void velocityCalculation(){
-    
-    if (abs(bandpassAccelX) < 0.02){
+    time1 = millis();
+   // if (abs(bandpassAccelX) < 0.02 &&  time1 > 23000){
+   //   accelerationSetpoint = 1;
+   //   }
+   if (abs(decayedAccelX) < 0.02){
       accelerationSetpoint = 1;
       }
 
@@ -144,21 +150,24 @@ void orientationAngleCalculation(){
     delay(2);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
-    newAcceleration = bandpassAccelX;
-    //Serial.println(newVelocity);
+    //newAcceleration = bandpassAccelX;
+    newAcceleration = decayedAccelX;
     //////////////////////////////////////////////////////////////
     deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
     newVelocity = oldVelocity + (deltaAcceleration*dt);
-    deltaVelocity = newVelocity - oldVelocity;
+    //deltaVelocity = newVelocity - oldVelocity;
     //////////////////////////////////////////////////////////////
-    bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05 , 0.1);
     //bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
-    tValue = 1;
-    rValue = 0.2;
-    decayFactor = pow(rValue,tValue-abs(bandpassVelocityX));
-    if (abs(bandpassVelocityX) <tValue){
-      bandpassVelocityX = bandpassVelocityX*decayFactor;
-      }
+    //bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05, 0.1);
+    //decayedVelocityX = decayFilter(bandpassVelocityX , 0.3 , 0.5);
+    /*//tValue = 0.5;
+    //rValue = 0.3;
+    //decayFactor = pow(rValue,tValue-abs(bandpassVelocityX));
+    //if (abs(bandpassVelocityX) <tValue){
+    //  bandpassVelocityX = bandpassVelocityX*decayFactor;
+    //  }*/
+   
+    
     //////////////////////////////////////////////////////////////
     //if (time> 10000){
       newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
@@ -175,7 +184,7 @@ void orientationAngleCalculation(){
     //Serial.println(bandpassVelocityX);
     //Serial.println(bandpassAccelX);
     //Serial.print(",");
-    //Serial.println(deltaPosition);
+    //Serial.println(deltaPosition);*/
 
 //////////////////////////////////////////////////////////
 
