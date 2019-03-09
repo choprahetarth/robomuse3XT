@@ -69,9 +69,7 @@ float bandpassFilter(float sensorReadings, float alphaLow, float alphaHigh){
       filteredLow = (1-alphaLow)*filteredLow + alphaLow*newValue; ////ema lowpass filter
       filteredHigh = (1-alphaHigh)*filteredHigh + alphaHigh*newValue; /// ema highpass filter
       bandpassValue = filteredHigh - filteredLow;
-      //Serial.println(bandpassValue);
       return bandpassValue;
-      //return filteredLow;
   }
 
 float decayFilter(float rawValue, float rValue, float tValue){
@@ -124,9 +122,8 @@ void orientationAngleCalculation(){
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13);
       decayedAccelX = decayFilter(bandpassAccelX, 0.3 , 2);
       Serial.print(",");
-      Serial.println(bandpassAccelX);
-      Serial.print(decayedAccelX);
-      Serial.print(",");
+      //Serial.println(bandpassAccelX);
+      Serial.println(decayedAccelX);
       //Serial.print(newVelocity);
       //Serial.print(",");
       //Serial.print(averageAccelX);
@@ -135,11 +132,11 @@ void orientationAngleCalculation(){
     }
 
   void velocityCalculation(){
-    time1 = millis();
+    int time1 = millis();
    // if (abs(bandpassAccelX) < 0.02 &&  time1 > 23000){
    //   accelerationSetpoint = 1;
    //   }
-   if (abs(decayedAccelX) < 0.1){
+   if (abs(decayedAccelX) < 0.02 ){
       accelerationSetpoint = 1;
       }
 
@@ -147,32 +144,27 @@ void orientationAngleCalculation(){
    if (accelerationSetpoint == 1){
     time = millis();
     timeholder1 = millis();
-    delay(2);
+    delay(0.5);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
     newAcceleration = decayedAccelX;
-    Serial.print(newAcceleration);
     //////////////////////////////////////////////////////////////
-    deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
+    //deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
+    deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (deltaAcceleration*dt);
     //deltaVelocity = newVelocity - oldVelocity;
     //////////////////////////////////////////////////////////////
-    //bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
+    bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
+    //Serial.println(bandpassVelocityX);
     //bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05, 0.1);
-    //decayedVelocityX = decayFilter(bandpassVelocityX , 0.3 , 0.5);
-    /*//tValue = 0.5;
-    //rValue = 0.3;
-    //decayFactor = pow(rValue,tValue-abs(bandpassVelocityX));
-    //if (abs(bandpassVelocityX) <tValue){
-    //  bandpassVelocityX = bandpassVelocityX*decayFactor;
-    //  }*/
-   
+    decayedVelocityX = decayFilter(bandpassVelocityX , 0.1 , 3);
+    Serial.print(decayedVelocityX);
     
     //////////////////////////////////////////////////////////////
     //if (time> 10000){
-      newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
+      //newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
       //newPosition = newPosition + (bandpassVelocityX*dt);
-      deltaPosition = newPosition - oldPosition;
+      //deltaPosition = newPosition - oldPosition;
       //}
     //////////////////////////////////////////////////////////////
     oldAcceleration = newAcceleration;
@@ -388,20 +380,6 @@ void loop() {
             //positionCalculation();
         #endif
 
-        #ifdef OUTPUT_TEAPOT
-            // display quaternion values in InvenSense Teapot demo format:
-            teapotPacket[2] = fifoBuffer[0];
-            teapotPacket[3] = fifoBuffer[1];
-            teapotPacket[4] = fifoBuffer[4];
-            teapotPacket[5] = fifoBuffer[5];
-            teapotPacket[6] = fifoBuffer[8];
-            teapotPacket[7] = fifoBuffer[9];
-            teapotPacket[8] = fifoBuffer[12];
-            teapotPacket[9] = fifoBuffer[13];
-            Serial.write(teapotPacket, 28);
-            teapotPacket[11]++; // packetCount, loops at 0xFF on purpose
-        #endif
-        
 
         // blink LED to indicate activity
         blinkState = !blinkState;
