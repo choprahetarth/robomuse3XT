@@ -259,9 +259,6 @@ void setup() {
     devStatus = mpu.dmpInitialize();
 
     // supply your own gyro offsets here, scaled for min sensitivity
- //   mpu.setXGyroOffset(220);
- //   mpu.setYGyroOffset(76);
- //   mpu.setZGyroOffset(-85);
  //   mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
       mpu.setXGyroOffset(123);
       mpu.setYGyroOffset(61);
