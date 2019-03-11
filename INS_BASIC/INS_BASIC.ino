@@ -51,7 +51,7 @@ float baseLineCorrection =0;
 static char myArray[4];
 int pinState = 0;
 int buttonState =0;
-int time=0, time1=0;
+int time1=0, time = 0;
 int timeholder1, timeholder2 =0;
 int dt = 0;
 int i, counter =0;
@@ -59,7 +59,7 @@ float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , new
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
 float alpha =0.1, alpha2 = 0.13;
-float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0;
+float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX;
 int accelerationSetpoint = 0;
 
 float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
@@ -78,6 +78,11 @@ float decayFilter(float rawValue, float rValue, float tValue){
         rawValue = rawValue * decayFactor;
       }
     return rawValue;
+  }
+float exponentialMovingFilter(float sensorReading , float alphaValue){
+      float averagedExpoValue = 0 ;
+      averagedExpoValue = (1-alphaValue)*(averagedExpoValue) + (sensorReading)*(alphaValue);
+      return averagedExpoValue;
   }
 
 float averagingFilter(float unAveragedFilter, int rangeOfFilter){
@@ -116,38 +121,44 @@ void orientationAngleCalculation(){
     accelX = aaWorld.x;
     accelY = aaWorld.y;
     accelZ = aaWorld.z;
-    averageAccelX = averagingFilter(accelX , 300);
+    averageAccelX = averagingFilter(accelX , 200);
     sumAccelX = 0;
     i = 0;
   }
 
   void emaFilter(){
+    timeholder1 = millis();
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13); ///////(rawSignal, lowerThreshold, upperThreshold)
       //bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
-      decayedAccelX = decayFilter(bandpassAccelX, 0.2 , 2);///////// (bandpassedSignal, exponential function, cutoff value)
+      decayedAccelX = decayFilter(bandpassAccelX, 0.02 , 2);///////// (bandpassedSignal, exponential function, cutoff value)
       //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
+      //Serial.print(",");
+      //Serial.println(decayedAccelX);
     }
 
   void velocityCalculation(){
-    if (abs(decayedAccelX) < 0.2){
+    if (abs(decayedAccelX) < 0.2 ){
       accelerationSetpoint = 1;
       }
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
-   if (accelerationSetpoint == 1 ){
+   if (accelerationSetpoint == 1 && (timeholder1 > 5000)){
     currentTime = millis();
     dt = currentTime - startTime;
-    Serial.println(dt);
+    //Serial.println(dt);
     newAcceleration = decayedAccelX;
     //////////////////////////////////////////////////////////////
-    deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
-    //if (abs(newAcceleration) > 250){newAcceleration = oldAcceleration;}
-    //Serial.println(deltaAcceleration);
-    //Serial.print(",");
-    //Serial.println(newAcceleration);
+    //deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
-    newVelocity = oldVelocity + (deltaAcceleration*dt);
-    deltaVelocity = ((newVelocity + oldVelocity)*0.5);
+    newVelocity = oldVelocity + (newAcceleration*dt);
+    emaVelocityX = exponentialMovingFilter( newVelocity , 0.2 );
+    //bandpassVelocityX = bandpassFilter(emaVelocityX , 0.1 , 0.13);
+    //decayedVelocityX = decayFilter(emaVelocityX , 0.02 , 2);
+    //Serial.print(",");
+    //Serial.println(emaVelocityX);
+    Serial.println(newVelocity);
+    //Serial.println(decayedVelocityX);
+    //deltaVelocity = ((newVelocity + oldVelocity)*0.5);
     //deltaVelocity = newVelocity - oldVelocity;
     //Serial.print(",");
     //Serial.print(newVelocity);
@@ -215,7 +226,6 @@ void dmpDataReady() {
 void setup() {
 
     startTime =millis();
-
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
