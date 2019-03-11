@@ -28,7 +28,7 @@ uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[640]; // FIFO storage buffer
+uint8_t fifoBuffer[800]; // FIFO storage buffer
 //uint8_t fifoBuffer[64]; // FIFO storage buffer
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
@@ -47,20 +47,20 @@ float currentYaw = 0;
 float currentPitch = 0;
 float currentRoll = 0; 
 float accelX, accelY, accelZ =0;
-//float baseLineCorrection =0;
-//static char myArray[4];
+float baseLineCorrection =0;
+static char myArray[4];
 int pinState = 0;
 int buttonState =0;
-//int time=0, time1=0;
-//int timeholder1, timeholder2 =0;
-//int dt = 0;
-//int i, counter =0;
-//float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
-//float newPosition, oldPosition, deltaPosition, totalPosition = 0;
+int time=0, time1=0;
+int timeholder1, timeholder2 =0;
+int dt = 0;
+int i, counter =0;
+float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
+float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
-//float alpha =0.1, alpha2 = 0.13;
-//float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0;
-//int accelerationSetpoint = 0;
+float alpha =0.1, alpha2 = 0.13;
+float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0;
+int accelerationSetpoint = 0;
 
 float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
 
@@ -80,6 +80,17 @@ float decayFilter(float rawValue, float rValue, float tValue){
     return rawValue;
   }
 
+float averagingFilter(float unAveragedFilter, int rangeOfFilter){
+   float filterSum=0, finalOutput=0;
+   int count;
+        for (count = 0 ; count < rangeOfFilter ; count++){
+             filterSum = filterSum + unAveragedFilter;
+            }
+    finalOutput = (filterSum / rangeOfFilter);
+    return finalOutput;
+  }
+
+
 void orientationAngleCalculation(){
   currentYaw = ypr[0] * 180/M_PI;
   currentPitch = ypr[1] * 180/M_PI;
@@ -88,11 +99,14 @@ void orientationAngleCalculation(){
   buttonState = digitalRead(8);
   //Serial.println (buttonState);
   if (buttonState == 0){
-  Serial.println(currentYaw);
-  Serial.println(currentPitch);
-  Serial.println(currentRoll);
-  Serial.println(decayedAccelX);
-  Serial.println(decayedAccelY);
+  //Serial.println(currentYaw);
+  //Serial.println(currentPitch);
+  //Serial.println(currentRoll);
+  //Serial.print(",");
+  //Serial.println(accelX);
+  //Serial.print(averageAccelX);
+  //Serial.println(decayedAccelX);
+  //Serial.println(decayedAccelY);
 
   
     }
@@ -102,46 +116,41 @@ void orientationAngleCalculation(){
     accelX = aaWorld.x;
     accelY = aaWorld.y;
     accelZ = aaWorld.z;
-    //for (i=0; i<100;i++ ){
-    //  sumAccelX = sumAccelX + accelX;
-    //  }
-    //averageAccelX = sumAccelX / 500;
-    averageAccelX = accelX;
-    averageAccelY = accelY;
-    //sumAccelX = 0;
-    //i = 0;
+    averageAccelX = averagingFilter(accelX , 500);
+    sumAccelX = 0;
+    i = 0;
   }
 
   void emaFilter(){
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13); ///////(rawSignal, lowerThreshold, upperThreshold)
-      bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
+      //bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
       decayedAccelX = decayFilter(bandpassAccelX, 0.2 , 2);///////// (bandpassedSignal, exponential function, cutoff value)
-      decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
+      //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
     }
 
-  /*void velocityCalculation(){
+  void velocityCalculation(){
     int time1 = millis();
    // if (abs(bandpassAccelX) < 0.02 &&  time1 > 23000){
    //   accelerationSetpoint = 1;
    //   }
-   if (abs(decayedAccelX) < 0.02){
+   if (abs(decayedAccelX) < 0.2){
       accelerationSetpoint = 1;
       }
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
-   if (accelerationSetpoint == 1 && time1 > 10000){
+   if (accelerationSetpoint == 1 ){
     time = millis();
     timeholder1 = millis();
-    delay(10);
+    delay(3);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
     newAcceleration = decayedAccelX;
     //////////////////////////////////////////////////////////////
     deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
-    Serial.print(",");
-    Serial.println(deltaAcceleration);
-    Serial.print(",");
-    Serial.print(newAcceleration);
+    //if (abs(newAcceleration) > 250){newAcceleration = oldAcceleration;}
+    //Serial.println(deltaAcceleration);
+    //Serial.print(",");
+    Serial.println(newAcceleration);
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (deltaAcceleration*dt);
     deltaVelocity = ((newVelocity + oldVelocity)*0.5);
@@ -188,9 +197,9 @@ void orientationAngleCalculation(){
 
 //////////////////////////////////////////////////////////
    
-      //}
+      }
 
-//  }
+  }
     
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
@@ -212,7 +221,8 @@ void setup() {
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
-        Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+        //Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+        Wire.setClock(500000);
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
@@ -359,7 +369,7 @@ void loop() {
             orientationAngleCalculation();
             orientationAccelerationWorldCalculation();
             emaFilter();
-            //velocityCalculation();
+            velocityCalculation();
             //positionCalculation();
         #endif
 
