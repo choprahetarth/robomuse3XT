@@ -92,6 +92,7 @@ void orientationAngleCalculation(){
   Serial.println(currentPitch);
   Serial.println(currentRoll);
   Serial.println(decayedAccelX);
+  Serial.println(decayedAccelY);
 
   
     }
