@@ -121,9 +121,9 @@ void orientationAngleCalculation(){
        /////////////////////// */
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13);
       decayedAccelX = decayFilter(bandpassAccelX, 0.3 , 2);
-      Serial.print(",");
+      //Serial.print(",");
       //Serial.println(bandpassAccelX);
-      Serial.println(decayedAccelX);
+      //Serial.println(decayedAccelX);
       //Serial.print(newVelocity);
       //Serial.print(",");
       //Serial.print(averageAccelX);
@@ -157,15 +157,19 @@ void orientationAngleCalculation(){
     bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
     //Serial.println(bandpassVelocityX);
     //bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05, 0.1);
-    decayedVelocityX = decayFilter(bandpassVelocityX , 0.1 , 3);
-    Serial.print(decayedVelocityX);
+    decayedVelocityX = decayFilter(bandpassVelocityX , 0.1 , 0.5);
+    //Serial.print(decayedVelocityX);
+    //Serial.print(",");
+    //Serial.print(newPosition);
     
     //////////////////////////////////////////////////////////////
-    //if (time> 10000){
+    if (time> 10000){
       //newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
       //newPosition = newPosition + (bandpassVelocityX*dt);
-      //deltaPosition = newPosition - oldPosition;
-      //}
+      newPosition = newPosition + 10*(decayedVelocityX*dt);
+      deltaPosition = newPosition - oldPosition;
+      Serial.println("newPosition");
+      }
     //////////////////////////////////////////////////////////////
     oldAcceleration = newAcceleration;
     oldVelocity = newVelocity;
