@@ -42,7 +42,7 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
-
+unsigned long startTime, currentTime= 0;
 float currentYaw = 0;
 float currentPitch = 0;
 float currentRoll = 0; 
@@ -116,7 +116,7 @@ void orientationAngleCalculation(){
     accelX = aaWorld.x;
     accelY = aaWorld.y;
     accelZ = aaWorld.z;
-    averageAccelX = averagingFilter(accelX , 500);
+    averageAccelX = averagingFilter(accelX , 300);
     sumAccelX = 0;
     i = 0;
   }
@@ -129,28 +129,22 @@ void orientationAngleCalculation(){
     }
 
   void velocityCalculation(){
-    int time1 = millis();
-   // if (abs(bandpassAccelX) < 0.02 &&  time1 > 23000){
-   //   accelerationSetpoint = 1;
-   //   }
-   if (abs(decayedAccelX) < 0.2){
+    if (abs(decayedAccelX) < 0.2){
       accelerationSetpoint = 1;
       }
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
    if (accelerationSetpoint == 1 ){
-    time = millis();
-    timeholder1 = millis();
-    delay(3);
-    timeholder2 = millis();
-    dt = timeholder2 - timeholder1;
+    currentTime = millis();
+    dt = currentTime - startTime;
+    Serial.println(dt);
     newAcceleration = decayedAccelX;
     //////////////////////////////////////////////////////////////
     deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
     //if (abs(newAcceleration) > 250){newAcceleration = oldAcceleration;}
     //Serial.println(deltaAcceleration);
     //Serial.print(",");
-    Serial.println(newAcceleration);
+    //Serial.println(newAcceleration);
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (deltaAcceleration*dt);
     deltaVelocity = ((newVelocity + oldVelocity)*0.5);
@@ -181,10 +175,11 @@ void orientationAngleCalculation(){
       //}
       
     //////////////////////////////////////////////////////////////
-    
+    /////// RESET EVERYTHING HERE ////////////////////////////////
     oldAcceleration = newAcceleration;
     oldVelocity = newVelocity;
     oldPosition = newPosition;
+    startTime = currentTime;
     
     /////////////////////////////////
     
@@ -218,6 +213,10 @@ void dmpDataReady() {
 // ================================================================
 
 void setup() {
+
+    startTime =millis();
+
+  
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
