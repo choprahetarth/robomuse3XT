@@ -14,10 +14,8 @@
 
 MPU6050 mpu;
 
-#define OUTPUT_READABLE_YAWPITCHROLL
-//#define OUTPUT_READABLE_REALACCEL
+#define OUTPUT_READABLE_YAWPITCHROLL`
 #define OUTPUT_READABLE_WORLDACCEL
-//#define OUTPUT_TEAPOT
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
@@ -148,45 +146,27 @@ void orientationAngleCalculation(){
     //Serial.println(dt);
     newAcceleration = decayedAccelX;
     //////////////////////////////////////////////////////////////
-    //deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (newAcceleration*dt);
     emaVelocityX = exponentialMovingFilter( newVelocity , 0.2 );
     //bandpassVelocityX = bandpassFilter(emaVelocityX , 0.1 , 0.13);
     //decayedVelocityX = decayFilter(emaVelocityX , 0.02 , 2);
-    //Serial.print(",");
-    //Serial.println(emaVelocityX);
-    Serial.println(newVelocity);
+    Serial.print(",");
+    Serial.println(emaVelocityX);
     //Serial.println(decayedVelocityX);
     //deltaVelocity = ((newVelocity + oldVelocity)*0.5);
-    //deltaVelocity = newVelocity - oldVelocity;
-    //Serial.print(",");
-    //Serial.print(newVelocity);
     
     //////////////////////////////////////////////////////////////
-    
-    //bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
-    //Serial.println(bandpassVelocityX);
-    //bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05, 0.1);
-    //decayedVelocityX = decayFilter(bandpassVelocityX , 0.1 , 2);
-    //Serial.print(",");
-    //Serial.println(decayedVelocityX);
-    //Serial.print(",");
-    //Serial.print(bandpassVelocityX);
-    //Serial.print(newPosition);
-    
-    //////////////////////////////////////////////////////////////
-    
-    //if (time> 10000){
-      //newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
-      //newPosition = newPosition + (bandpassVelocityX*dt);
-      //newPosition = newPosition + (decayedVelocityX*dt);
-      newPosition = oldPosition + (deltaVelocity*dt);
+    ////////////////////////displacement calculation//////////////
+      deltaVelocity = newVelocity - oldVelocity;
+      //newPosition = oldPosition + (emaVelocityX*dt);
+      newPosition = newPosition + (deltaVelocity*dt);
       //deltaPosition = newPosition - oldPosition;
-      //}
+      Serial.print(newPosition);
       
     //////////////////////////////////////////////////////////////
     /////// RESET EVERYTHING HERE ////////////////////////////////
+    
     oldAcceleration = newAcceleration;
     oldVelocity = newVelocity;
     oldPosition = newPosition;
