@@ -14,7 +14,7 @@
 
 MPU6050 mpu;
 
-//#define OUTPUT_READABLE_YAWPITCHROLL
+#define OUTPUT_READABLE_YAWPITCHROLL
 //#define OUTPUT_READABLE_REALACCEL
 #define OUTPUT_READABLE_WORLDACCEL
 //#define OUTPUT_TEAPOT
@@ -28,7 +28,7 @@ uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[512]; // FIFO storage buffer
+uint8_t fifoBuffer[640]; // FIFO storage buffer
 //uint8_t fifoBuffer[64]; // FIFO storage buffer
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
@@ -88,93 +88,96 @@ void orientationAngleCalculation(){
   buttonState = digitalRead(8);
   //Serial.println (buttonState);
   if (buttonState == 0){
-  /*Serial.println(currentYaw);
-  Serial.println(currentPitch);
-  Serial.println(currentRoll);*/
+  //Serial.println(currentYaw);
+  //Serial.println(currentPitch);
+  //Serial.println(currentRoll);
+  Serial.print(",");
+  Serial.println(decayedAccelX);
+    Serial.print(",");
+  Serial.print(accelX);
+
+  
     }
   }
 
   void orientationAccelerationWorldCalculation(){
-    accelX = aaWorld.x/10;
-    accelY = aaWorld.y/10;
+    accelX = aaWorld.x;
+    accelY = aaWorld.y;
     accelZ = aaWorld.z;
-    for (i=0; i<500;i++ ){
-      sumAccelX = sumAccelX + accelX;
-      }
-    averageAccelX = sumAccelX / 500;
+    //for (i=0; i<100;i++ ){
+    //  sumAccelX = sumAccelX + accelX;
+    //  }
+    //averageAccelX = sumAccelX / 500;
+    averageAccelX = accelX;
     sumAccelX = 0;
     i = 0;
   }
 
   void emaFilter(){
-     /* //if (counter % 100 == 0){
-         //setpointAccelerationX = averageAccelX;
-         //Serial.println(counter);
-        //}
-
-      /////STATIC FILTER//////  
-      setpointAccelerationX = 0;
-      filteredAccelXLow = (1-alpha)*setpointAccelerationX + alpha*(averageAccelX);
-      if (abs(filteredAccelXLow)<1){
-        filteredAccelXLow = 0;
-        }
-       /////////////////////// */
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13);
-      decayedAccelX = decayFilter(bandpassAccelX, 0.3 , 2);
-      //Serial.print(",");
-      //Serial.println(bandpassAccelX);
-      //Serial.println(decayedAccelX);
-      //Serial.print(newVelocity);
-      //Serial.print(",");
-      //Serial.print(averageAccelX);
-      //Serial.print(",");
-      //Serial.print(aaWorld.x);
+      decayedAccelX = decayFilter(bandpassAccelX, 0.2 , 2);
     }
 
-  void velocityCalculation(){
+  /*void velocityCalculation(){
     int time1 = millis();
    // if (abs(bandpassAccelX) < 0.02 &&  time1 > 23000){
    //   accelerationSetpoint = 1;
    //   }
-   if (abs(decayedAccelX) < 0.02 ){
+   if (abs(decayedAccelX) < 0.02){
       accelerationSetpoint = 1;
       }
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
-   if (accelerationSetpoint == 1){
+   if (accelerationSetpoint == 1 && time1 > 10000){
     time = millis();
     timeholder1 = millis();
-    delay(0.5);
+    delay(10);
     timeholder2 = millis();
     dt = timeholder2 - timeholder1;
     newAcceleration = decayedAccelX;
     //////////////////////////////////////////////////////////////
-    //deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
-    deltaAcceleration = ((newAcceleration-oldAcceleration));
+    deltaAcceleration = ((newAcceleration + oldAcceleration)*0.5);
+    Serial.print(",");
+    Serial.println(deltaAcceleration);
+    Serial.print(",");
+    Serial.print(newAcceleration);
+    //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (deltaAcceleration*dt);
+    deltaVelocity = ((newVelocity + oldVelocity)*0.5);
     //deltaVelocity = newVelocity - oldVelocity;
+    //Serial.print(",");
+    //Serial.print(newVelocity);
+    
     //////////////////////////////////////////////////////////////
-    bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
+    
+    //bandpassVelocityX = bandpassFilter(newVelocity,0.05,0.1);
     //Serial.println(bandpassVelocityX);
     //bandpassVelocityX = bandpassFilter(deltaVelocity, 0.05, 0.1);
-    decayedVelocityX = decayFilter(bandpassVelocityX , 0.1 , 0.5);
-    //Serial.print(decayedVelocityX);
+    //decayedVelocityX = decayFilter(bandpassVelocityX , 0.1 , 2);
     //Serial.print(",");
+    //Serial.println(decayedVelocityX);
+    //Serial.print(",");
+    //Serial.print(bandpassVelocityX);
     //Serial.print(newPosition);
     
     //////////////////////////////////////////////////////////////
-    if (time> 10000){
+    
+    //if (time> 10000){
       //newPosition = oldPosition + (bandpassVelocityX*dt) + (0.5*deltaAcceleration*dt*dt);
       //newPosition = newPosition + (bandpassVelocityX*dt);
-      newPosition = newPosition + 10*(decayedVelocityX*dt);
-      deltaPosition = newPosition - oldPosition;
-      Serial.println("newPosition");
-      }
+      //newPosition = newPosition + (decayedVelocityX*dt);
+      newPosition = oldPosition + (deltaVelocity*dt);
+      //deltaPosition = newPosition - oldPosition;
+      //}
+      
     //////////////////////////////////////////////////////////////
+    
     oldAcceleration = newAcceleration;
     oldVelocity = newVelocity;
     oldPosition = newPosition;
+    
     /////////////////////////////////
+    
     //Serial.print(",");
     //Serial.println(deltaVelocity);
     //Serial.println(bandpassVelocityX);
@@ -183,33 +186,10 @@ void orientationAngleCalculation(){
     //Serial.println(deltaPosition);*/
 
 //////////////////////////////////////////////////////////
-
-/////////////code to be used for static filter ///////////
-/*float newVelocity=0, newPosition =0, sum =0;
-
-if (accelerationSetpoint == 1){
-    time = millis();
-    timeholder1 = millis();
-    delay(2);
-    timeholder2 = millis();
-    dt = timeholder2 - timeholder1;
-    newAcceleration = bandpassAccelX;
-    //Serial.println(newVelocity);
-    //////////////////////////////////////////////////////////////
-    newVelocity = newVelocity + (newAcceleration*dt);
-    //////////////////////////////////////////////////////////////
-    newPosition = newPosition + (newVelocity*dt);
-    //////////////////////////////////////////////////////////////
-    //oldAcceleration = newAcceleration;
-    //oldVelocity = newVelocity;
-    //oldPosition = newPosition;
-    //Serial.println(newPosition);*/
-    
-//////////////////////////////////////////////////////////
    
-      }
+      //}
 
-  }
+//  }
     
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
@@ -375,9 +355,10 @@ void loop() {
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+            orientationAngleCalculation();
             orientationAccelerationWorldCalculation();
             emaFilter();
-            velocityCalculation();
+            //velocityCalculation();
             //positionCalculation();
         #endif
 
