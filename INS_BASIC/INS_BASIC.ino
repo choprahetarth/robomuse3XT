@@ -47,20 +47,20 @@ float currentYaw = 0;
 float currentPitch = 0;
 float currentRoll = 0; 
 float accelX, accelY, accelZ =0;
-float baseLineCorrection =0;
+//float baseLineCorrection =0;
 //static char myArray[4];
 int pinState = 0;
 int buttonState =0;
-int time=0, time1=0;
-int timeholder1, timeholder2 =0;
-int dt = 0;
-int i, counter =0;
-float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
-float newPosition, oldPosition, deltaPosition, totalPosition = 0;
-float sumAccelX =0, averageAccelX, decayedAccelX =0 ;
-float alpha =0.1, alpha2 = 0.13;
-float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0, bandpassAccelX = 0, bandpassVelocityX = 0;
-int accelerationSetpoint = 0;
+//int time=0, time1=0;
+//int timeholder1, timeholder2 =0;
+//int dt = 0;
+//int i, counter =0;
+//float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
+//float newPosition, oldPosition, deltaPosition, totalPosition = 0;
+float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
+//float alpha =0.1, alpha2 = 0.13;
+//float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0;
+//int accelerationSetpoint = 0;
 
 float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
 
@@ -88,13 +88,10 @@ void orientationAngleCalculation(){
   buttonState = digitalRead(8);
   //Serial.println (buttonState);
   if (buttonState == 0){
-  //Serial.println(currentYaw);
-  //Serial.println(currentPitch);
-  //Serial.println(currentRoll);
-  Serial.print(",");
+  Serial.println(currentYaw);
+  Serial.println(currentPitch);
+  Serial.println(currentRoll);
   Serial.println(decayedAccelX);
-    Serial.print(",");
-  Serial.print(accelX);
 
   
     }
@@ -109,13 +106,16 @@ void orientationAngleCalculation(){
     //  }
     //averageAccelX = sumAccelX / 500;
     averageAccelX = accelX;
-    sumAccelX = 0;
-    i = 0;
+    averageAccelY = accelY;
+    //sumAccelX = 0;
+    //i = 0;
   }
 
   void emaFilter(){
-      bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13);
-      decayedAccelX = decayFilter(bandpassAccelX, 0.2 , 2);
+      bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13); ///////(rawSignal, lowerThreshold, upperThreshold)
+      bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
+      decayedAccelX = decayFilter(bandpassAccelX, 0.2 , 2);///////// (bandpassedSignal, exponential function, cutoff value)
+      decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
     }
 
   /*void velocityCalculation(){
