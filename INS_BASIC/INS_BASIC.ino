@@ -140,29 +140,44 @@ void orientationAngleCalculation(){
       }
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
+
    if (accelerationSetpoint == 1 && (timeholder1 > 5000)){
     currentTime = millis();
     dt = currentTime - startTime;
     //Serial.println(dt);
     newAcceleration = decayedAccelX;
+    
     //////////////////////////////////////////////////////////////
+    
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (newAcceleration*dt);
     emaVelocityX = exponentialMovingFilter( newVelocity , 0.2 );
+    //Serial.print(",");
+    //Serial.println(emaVelocityX);
+    //Serial.print(newVelocity);
     //bandpassVelocityX = bandpassFilter(emaVelocityX , 0.1 , 0.13);
     //decayedVelocityX = decayFilter(emaVelocityX , 0.02 , 2);
-    Serial.print(",");
-    Serial.println(emaVelocityX);
-    //Serial.println(decayedVelocityX);
-    //deltaVelocity = ((newVelocity + oldVelocity)*0.5);
+ 
     
     //////////////////////////////////////////////////////////////
     ////////////////////////displacement calculation//////////////
-      deltaVelocity = newVelocity - oldVelocity;
+
+    
+    if (timeholder1 > 8000)
+      //deltaVelocity = newVelocity - oldVelocity;
       //newPosition = oldPosition + (emaVelocityX*dt);
+      deltaVelocity = emaVelocityX;
       newPosition = newPosition + (deltaVelocity*dt);
+      deltaPosition = newPosition - oldPosition; 
+      Serial.println(deltaPosition);
       //deltaPosition = newPosition - oldPosition;
-      Serial.print(newPosition);
+      //Serial.println(newPosition);
+      //Serial.print(",");
+      //Serial.println(newAcceleration);
+      //Serial.print(",");
+      //Serial.print(",");
+      //Serial.print(newVelocity);
+
       
     //////////////////////////////////////////////////////////////
     /////// RESET EVERYTHING HERE ////////////////////////////////
@@ -186,6 +201,9 @@ void orientationAngleCalculation(){
       }
 
   }
+
+
+
     
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
