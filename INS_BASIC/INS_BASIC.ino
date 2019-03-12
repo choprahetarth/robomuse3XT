@@ -52,12 +52,12 @@ int buttonState =0;
 int time1=0, time = 0;
 int timeholder1, timeholder2 =0;
 int dt = 0;
-int i, counter =0;
+int i, counter =0, count = 0;
 float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
 float alpha =0.1, alpha2 = 0.13;
-float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX;
+float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0, finalVelocityX = 0,setPointSumVelX =0;
 int accelerationSetpoint = 0;
 
 float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
@@ -116,12 +116,14 @@ void orientationAngleCalculation(){
   }
 
   void orientationAccelerationWorldCalculation(){
+    count++;
     accelX = aaWorld.x;
     accelY = aaWorld.y;
     accelZ = aaWorld.z;
     averageAccelX = averagingFilter(accelX , 200);
     sumAccelX = 0;
     i = 0;
+    Serial.println(count);
   }
 
   void emaFilter(){
@@ -130,11 +132,9 @@ void orientationAngleCalculation(){
       //bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
       decayedAccelX = decayFilter(bandpassAccelX, 0.02 , 2);///////// (bandpassedSignal, exponential function, cutoff value)
       //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
-      //Serial.print(",");
-      //Serial.println(decayedAccelX);
     }
 
-  void velocityCalculation(){
+ /* void velocityCalculation(){
     if (abs(decayedAccelX) < 0.2 ){
       accelerationSetpoint = 1;
       }
@@ -144,19 +144,25 @@ void orientationAngleCalculation(){
    if (accelerationSetpoint == 1 && (timeholder1 > 5000)){
     currentTime = millis();
     dt = currentTime - startTime;
-    //Serial.println(dt);
     newAcceleration = decayedAccelX;
     
     //////////////////////////////////////////////////////////////
-    
+    counter++;
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (newAcceleration*dt);
     emaVelocityX = exponentialMovingFilter( newVelocity , 0.2 );
-    //Serial.print(",");
-    //Serial.println(emaVelocityX);
-    //Serial.print(newVelocity);
+    if (currentTime > 5000 && currentTime < 8000){
+      count ++;
+      setPointSumVelX = setPointSumVelX + emaVelocityX;
+      }
+    setPointSumVelX = setPointSumVelX / count; 
+    finalVelocityX = emaVelocityX - setPointSumVelX;
+    Serial.print(",");
+    Serial.println(emaVelocityX);
+    Serial.println(counter);
     //bandpassVelocityX = bandpassFilter(emaVelocityX , 0.1 , 0.13);
-    //decayedVelocityX = decayFilter(emaVelocityX , 0.02 , 2);
+    //decayedVelocityX = decayFilter(finalVelocityX , 0.02 , 2);
+    //Serial.println(decayedVelocityX);
  
     
     //////////////////////////////////////////////////////////////
@@ -169,7 +175,6 @@ void orientationAngleCalculation(){
       deltaVelocity = emaVelocityX;
       newPosition = newPosition + (deltaVelocity*dt);
       deltaPosition = newPosition - oldPosition; 
-      Serial.println(deltaPosition);
       //deltaPosition = newPosition - oldPosition;
       //Serial.println(newPosition);
       //Serial.print(",");
@@ -180,7 +185,7 @@ void orientationAngleCalculation(){
 
       
     //////////////////////////////////////////////////////////////
-    /////// RESET EVERYTHING HERE ////////////////////////////////
+    ////////////////// RESET EVERYTHING HERE /////////////////////
     
     oldAcceleration = newAcceleration;
     oldVelocity = newVelocity;
@@ -198,9 +203,9 @@ void orientationAngleCalculation(){
 
 //////////////////////////////////////////////////////////
    
-      }
+//      }
 
-  }
+//  }
 
 
 
@@ -351,6 +356,7 @@ void loop() {
 
         // read a packet from FIFO
         mpu.getFIFOBytes(fifoBuffer, packetSize);
+        mpu.resetFIFO();
         
         // track FIFO count here in case there is > 1 packet available
         // (this lets us immediately read more without waiting for an interrupt)
@@ -376,7 +382,7 @@ void loop() {
             orientationAngleCalculation();
             orientationAccelerationWorldCalculation();
             emaFilter();
-            velocityCalculation();
+            //velocityCalculation();
             //positionCalculation();
         #endif
 
