@@ -49,16 +49,17 @@ float baseLineCorrection =0;
 static char myArray[4];
 int pinState = 0;
 int buttonState =0;
-int time1=0, time = 0;
-int timeholder1, timeholder2 =0;
-int dt = 0;
-int i, counter =0, count = 0;
+unsigned long  time1=0, time = 0;
+unsigned long timeholder1, timeholder2 =0;
+unsigned long  dt = 0;
+unsigned long  i, counter =0, count = 0;
 float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
 float newPosition, oldPosition, deltaPosition, totalPosition = 0;
 float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
 float alpha =0.1, alpha2 = 0.13;
-float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0, finalVelocityX = 0,setPointSumVelX =0;
+//float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0, finalVelocityX = 0,setPointSumVelX =0;
 int accelerationSetpoint = 0;
+long setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0, finalVelocityX = 0,setPointSumVelX =0;
 
 float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
 
@@ -123,43 +124,46 @@ void orientationAngleCalculation(){
     averageAccelX = averagingFilter(accelX , 200);
     sumAccelX = 0;
     i = 0;
-    Serial.println(count);
+
   }
 
   void emaFilter(){
     timeholder1 = millis();
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13); ///////(rawSignal, lowerThreshold, upperThreshold)
       //bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
-      decayedAccelX = decayFilter(bandpassAccelX, 0.02 , 2);///////// (bandpassedSignal, exponential function, cutoff value)
-      //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
+      decayedAccelX = decayFilter(bandpassAccelX, 0.02 , 5);///////// (bandpassedSignal, exponential function, cutoff value)
+      //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);'
     }
 
- /* void velocityCalculation(){
+  void velocityCalculation(){
     if (abs(decayedAccelX) < 0.2 ){
+      count++;
       accelerationSetpoint = 1;
       }
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
 
-   if (accelerationSetpoint == 1 && (timeholder1 > 5000)){
+   if (accelerationSetpoint == 1){ //&&  (timeholder1 > 5000)){
     currentTime = millis();
     dt = currentTime - startTime;
     newAcceleration = decayedAccelX;
-    
     //////////////////////////////////////////////////////////////
-    counter++;
     //deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocity = oldVelocity + (newAcceleration*dt);
     emaVelocityX = exponentialMovingFilter( newVelocity , 0.2 );
+    Serial.print(",");
+    Serial.println(emaVelocityX);
+    Serial.print(newAcceleration);
+    Serial.print(",");
+    Serial.print(timeholder1);
     if (currentTime > 5000 && currentTime < 8000){
       count ++;
       setPointSumVelX = setPointSumVelX + emaVelocityX;
       }
     setPointSumVelX = setPointSumVelX / count; 
     finalVelocityX = emaVelocityX - setPointSumVelX;
-    Serial.print(",");
-    Serial.println(emaVelocityX);
-    Serial.println(counter);
+    //Serial.println(emaVelocityX);
+    //Serial.println(counter);
     //bandpassVelocityX = bandpassFilter(emaVelocityX , 0.1 , 0.13);
     //decayedVelocityX = decayFilter(finalVelocityX , 0.02 , 2);
     //Serial.println(decayedVelocityX);
@@ -203,9 +207,9 @@ void orientationAngleCalculation(){
 
 //////////////////////////////////////////////////////////
    
-//      }
+      }
 
-//  }
+  }
 
 
 
@@ -266,13 +270,13 @@ void setup() {
     devStatus = mpu.dmpInitialize();
 
     // supply your own gyro offsets here, scaled for min sensitivity
- //   mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-      mpu.setXGyroOffset(123);
-      mpu.setYGyroOffset(61);
-      mpu.setZGyroOffset(4);
-      mpu.setZAccelOffset(941);
-      //mpu.setXAccelOffset(-5467);
-      //mpu.setYAccelOffset(786);
+     // mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+      mpu.setXGyroOffset(71);
+      mpu.setYGyroOffset(45);
+      mpu.setZGyroOffset(65);
+      mpu.setZAccelOffset(1935);
+      mpu.setXAccelOffset(-1436);
+      mpu.setYAccelOffset(-2234);
 
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
@@ -382,7 +386,7 @@ void loop() {
             orientationAngleCalculation();
             orientationAccelerationWorldCalculation();
             emaFilter();
-            //velocityCalculation();
+            velocityCalculation();
             //positionCalculation();
         #endif
 
