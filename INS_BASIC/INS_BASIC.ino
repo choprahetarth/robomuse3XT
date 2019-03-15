@@ -14,7 +14,7 @@
 
 MPU6050 mpu;
 
-#define OUTPUT_READABLE_YAWPITCHROLL`
+#define OUTPUT_READABLE_YAWPITCHROLL
 #define OUTPUT_READABLE_WORLDACCEL
 #define INTERRUPT_PIN 2  // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
@@ -54,13 +54,13 @@ unsigned long timeholder1, timeholder2 =0;
 unsigned long  dt = 0;
 unsigned long  i, counter =0, count = 0;
 float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocityX = 0 , newVelocityX= 0, deltaVelocityX=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
-float newPosition, oldPosition, deltaPosition, totalPosition = 0, emaPositionX;
+float newPositionX, oldPositionX, deltaPosition, totalPosition = 0, emaPositionX;
 float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
 float alpha =0.1, alpha2 = 0.13;
 //float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0, finalVelocityX = 0,setPointSumVelX =0;
 int accelerationSetpoint = 0;
 long setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0,setPointSumVelX =0;
-float areaNewPositive, areaOldPositive, areaNewNegative, areaOldNegative =0, finalVelocityX = 0;
+float areaNewPositive, areaOldPositive, areaNewNegative, areaOldNegative =0, finalVelocityX = 0, newInputVelocityX =0 , oldInputVelocityX =0;
 
 float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
 
@@ -168,8 +168,8 @@ void orientationAngleCalculation(){
     Serial.print("Velocity:       ");
     Serial.println(finalVelocityX);
     Serial.println("================================="); */
-    ///////////////////////////////////////////////////////////
     
+    //////////////////////////////////////////////////////////
     /////////////////Velocity calculation/////////////////////
     
     deltaAcceleration = ((newAcceleration-oldAcceleration));
@@ -177,31 +177,29 @@ void orientationAngleCalculation(){
     movementEndCheck();
     emaVelocityX = exponentialMovingFilter( newVelocityX , 0.2 );
     decayedVelocityX = decayFilter(emaVelocityX, 0.02,2);
-    newVelocityX = decayedVelocityX;
-     
+    
     //////////////////////////////////////////////////////////////
-    ////////////////////////displacement calculation//////////////
-
-    deltaVelocityX = ((newVelocityX - oldVelocityX));
-    newPosition = oldPosition + (oldVelocityX *dt) + ((deltaVelocityX/2)*dt);
-    emaPositionX = exponentialMovingFilter(newPosition, 0.2);
-    Serial.println(emaPositionX);
-      
+    /////////////////Displacement calculation/////////////////////
+    
+    newInputVelocityX = decayedVelocityX;
+    deltaVelocityX = ((newInputVelocityX - oldInputVelocityX));
+    newPositionX = oldPositionX + (oldInputVelocityX *dt) + ((deltaVelocityX/2)*dt);
+    emaPositionX = exponentialMovingFilter(newPositionX, 0.2);
+    Serial.println(newPositionX/10000);
+    
     //////////////////////////////////////////////////////////////
     ////////////////// RESET EVERYTHING HERE /////////////////////
     
-
     oldAcceleration = newAcceleration;
     oldVelocityX = newVelocityX;
-    oldPosition = newPosition;
+    oldInputVelocityX = newInputVelocityX;
+    oldPositionX = newPositionX;
     startTime = currentTime;
     areaOldNegative = areaNewNegative;
     areaOldPositive = areaNewPositive;
     
-    /////////////////////////////////
-    
-
-//////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////
    
       }
 
@@ -383,7 +381,6 @@ void loop() {
             orientationAccelerationWorldCalculation();
             emaFilter();
             velocityCalculation();
-            //positionCalculation();
         #endif
 
 
