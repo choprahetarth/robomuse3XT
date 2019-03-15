@@ -53,8 +53,8 @@ unsigned long  time1=0, time = 0;
 unsigned long timeholder1, timeholder2 =0;
 unsigned long  dt = 0;
 unsigned long  i, counter =0, count = 0;
-float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocity = 0 , newVelocity= 0, deltaVelocity=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
-float newPosition, oldPosition, deltaPosition, totalPosition = 0;
+float newAcceleration, oldAcceleration, deltaAcceleration, oldVelocityX = 0 , newVelocityX= 0, deltaVelocityX=0, newAccelX=0, oldAccelX=0, decayedVelocityX =0 ;
+float newPosition, oldPosition, deltaPosition, totalPosition = 0, emaPositionX;
 float sumAccelX =0, averageAccelX, decayedAccelX =0 , averageAccelY =0, decayedAccelY = 0, bandpassAccelY = 0, bandpassAccelX = 0;
 float alpha =0.1, alpha2 = 0.13;
 //float setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0, finalVelocityX = 0,setPointSumVelX =0;
@@ -99,7 +99,7 @@ void movementEndCheck(){
    if (abs(newAcceleration)<0.01){count++;}
    else {count = 0;}
    
-   if (count>25){newVelocity = 0; oldVelocity= 0;} 
+   if (count>25){newVelocityX = 0; oldVelocityX= 0;} 
   }
 void orientationAngleCalculation(){
   currentYaw = ypr[0] * 180/M_PI;
@@ -168,69 +168,31 @@ void orientationAngleCalculation(){
     Serial.print("Velocity:       ");
     Serial.println(finalVelocityX);
     Serial.println("================================="); */
-
+    ///////////////////////////////////////////////////////////
     
-    ////////////////////////////////////////////////////////////
-
-
+    /////////////////Velocity calculation/////////////////////
     
-    //////////////////////////////////////////////////////////////
     deltaAcceleration = ((newAcceleration-oldAcceleration));
-    newVelocity = oldVelocity + (oldAcceleration*dt) + ((deltaAcceleration/2)*dt);
+    newVelocityX = oldVelocityX + (oldAcceleration*dt) + ((deltaAcceleration/2)*dt);
     movementEndCheck();
-    Serial.print(",");
-    Serial.println(newVelocity);
-    Serial.print(decayedAccelX);
-    
-    //emaVelocityX = exponentialMovingFilter( newVelocity , 0.2 );
-    //emaVelocityX = emaVelocityX/10;
-    
-    //if (newAcceleration < 0.01) {
-    //   decayedVelocityX = decayFilter(emaVelocityX , 0.02 , 2);
-    //   emaVelocityX = bandpassVelocityX;
-    //}
-    
-    //Serial.print(",");
-    //Serial.println(emaVelocityX);
-    //Serial.print(newAcceleration);
-    
-    //if (currentTime > 5000 && currentTime < 8000){
-    //  count ++;
-    //  setPointSumVelX = setPointSumVelX + emaVelocityX;
-    //  }
-    //setPointSumVelX = setPointSumVelX / count; 
-    //finalVelocityX = emaVelocityX - setPointSumVelX;
-    //Serial.println(emaVelocityX);
-    //Serial.println(counter);
-    //bandpassVelocityX = bandpassFilter(emaVelocityX , 0.1 , 0.13);
-    //decayedVelocityX = decayFilter(finalVelocityX , 0.02 , 2);
-    //Serial.println(decayedVelocityX);
- 
-    
+    emaVelocityX = exponentialMovingFilter( newVelocityX , 0.2 );
+    decayedVelocityX = decayFilter(emaVelocityX, 0.02,2);
+    newVelocityX = decayedVelocityX;
+     
     //////////////////////////////////////////////////////////////
     ////////////////////////displacement calculation//////////////
 
-    
-      //deltaVelocity = newVelocity - oldVelocity;
-      //newPosition = oldPosition + (emaVelocityX*dt);
-      //deltaVelocity = emaVelocityX;
-      //newPosition = newPosition + (deltaVelocity*dt);
-      //deltaPosition = newPosition - oldPosition; 
-      //deltaPosition = newPosition - oldPosition;
-      //Serial.println(newPosition);
-      //Serial.print(",");
-      //Serial.println(newAcceleration);
-      //Serial.print(",");
-      //Serial.print(",");
-      //Serial.print(newVelocity);
-
+    deltaVelocityX = ((newVelocityX - oldVelocityX));
+    newPosition = oldPosition + (oldVelocityX *dt) + ((deltaVelocityX/2)*dt);
+    emaPositionX = exponentialMovingFilter(newPosition, 0.2);
+    Serial.println(emaPositionX);
       
     //////////////////////////////////////////////////////////////
     ////////////////// RESET EVERYTHING HERE /////////////////////
     
 
     oldAcceleration = newAcceleration;
-    oldVelocity = newVelocity;
+    oldVelocityX = newVelocityX;
     oldPosition = newPosition;
     startTime = currentTime;
     areaOldNegative = areaNewNegative;
@@ -238,12 +200,6 @@ void orientationAngleCalculation(){
     
     /////////////////////////////////
     
-    //Serial.print(",");
-    //Serial.println(deltaVelocity);
-    //Serial.println(bandpassVelocityX);
-    //Serial.println(bandpassAccelX);
-    //Serial.print(",");
-    //Serial.println(deltaPosition);*/
 
 //////////////////////////////////////////////////////////
    
