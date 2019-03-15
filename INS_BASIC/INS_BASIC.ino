@@ -132,7 +132,7 @@ void orientationAngleCalculation(){
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13); ///////(rawSignal, lowerThreshold, upperThreshold)
       //bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
       decayedAccelX = decayFilter(bandpassAccelX, 0.02 , 5);///////// (bandpassedSignal, exponential function, cutoff value)
-      //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);'
+      //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
     }
 
   void velocityCalculation(){
@@ -143,7 +143,7 @@ void orientationAngleCalculation(){
 
 ///////////////// code to be used with bandpassAccelX bandpass filter ////////////////////////
 
-   if (accelerationSetpoint == 1){ //&&  (timeholder1 > 5000)){
+   if (accelerationSetpoint == 1 &&  (timeholder1 > 5000)){
     currentTime = millis();
     dt = currentTime - startTime;
     newAcceleration = decayedAccelX;
@@ -154,8 +154,6 @@ void orientationAngleCalculation(){
     Serial.print(",");
     Serial.println(emaVelocityX);
     Serial.print(newAcceleration);
-    Serial.print(",");
-    Serial.print(timeholder1);
     if (currentTime > 5000 && currentTime < 8000){
       count ++;
       setPointSumVelX = setPointSumVelX + emaVelocityX;
@@ -173,7 +171,6 @@ void orientationAngleCalculation(){
     ////////////////////////displacement calculation//////////////
 
     
-    if (timeholder1 > 8000)
       //deltaVelocity = newVelocity - oldVelocity;
       //newPosition = oldPosition + (emaVelocityX*dt);
       deltaVelocity = emaVelocityX;
