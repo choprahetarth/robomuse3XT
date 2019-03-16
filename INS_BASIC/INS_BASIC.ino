@@ -2,7 +2,7 @@
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
-
+#include <microsmooth.h>
 #include "MPU6050_6Axis_MotionApps20.h"
 //#include "MPU6050.h" // not necessary if using MotionApps include file
 
@@ -29,6 +29,7 @@ uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[800]; // FIFO storage buffer
 //uint8_t fifoBuffer[64]; // FIFO storage buffer
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
+uint16_t *ptr;
 
 
 // orientation/motion vars
@@ -62,7 +63,7 @@ int accelerationSetpoint = 0;
 long setpointAccelerationX ,filteredAccelXLow =0, filteredAccelXHigh = 0,  bandpassVelocityX = 0, emaVelocityX=0,setPointSumVelX =0;
 float areaNewPositive, areaOldPositive, areaNewNegative, areaOldNegative =0, finalVelocityX = 0, newInputVelocityX =0 , oldInputVelocityX =0;
 
-float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0;
+float newValue, alphaLow, alphaHigh, bandpassValue, filteredHigh, filteredLow, sensorReadings = 0, tValue = 0, decayFactor = 0, rValue=0, decayFactor1 =0, sgaFilter;
 
 float bandpassFilter(float sensorReadings, float alphaLow, float alphaHigh){
       newValue = sensorReadings;
@@ -127,19 +128,21 @@ void orientationAngleCalculation(){
     accelX = aaWorld.x;
     accelY = aaWorld.y;
     accelZ = aaWorld.z;
-    averageAccelX = averagingFilter(accelX , 200);
-    //averageAccelX = aaWorld.x;
+    //averageAccelX = averagingFilter(accelX , 200);
+    averageAccelX = aaWorld.x;
     sumAccelX = 0;
     i = 0;
 
   }
 
   void emaFilter(){
-    timeholder1 = millis();
+      timeholder1 = millis();
       bandpassAccelX = bandpassFilter(averageAccelX, 0.1 , 0.13); ///////(rawSignal, lowerThreshold, upperThreshold)
-      //bandpassAccelY = bandpassFilter(averageAccelY , 0.1, 0.13);
-      decayedAccelX = decayFilter(bandpassAccelX, 0.02 , 5);///////// (bandpassedSignal, exponential function, cutoff value)
-      //decayedAccelY = decayFilter(bandpassAccelY, 0.2, 2);
+      decayedAccelX = decayFilter(bandpassAccelX, 0.01 , 5);///////// (bandpassedSignal, exponential function, cutoff value)
+      //sgaFilter = rdp_filter(decayedAccelX,ptr);
+      Serial.print(",");
+      Serial.println(decayedAccelX);
+      Serial.print(bandpassAccelX);
     }
 
   void velocityCalculation(){
@@ -174,7 +177,7 @@ void orientationAngleCalculation(){
     
     deltaAcceleration = ((newAcceleration-oldAcceleration));
     newVelocityX = oldVelocityX + (oldAcceleration*dt) + ((deltaAcceleration/2)*dt);
-    movementEndCheck();
+    //movementEndCheck();
     emaVelocityX = exponentialMovingFilter( newVelocityX , 0.2 );
     decayedVelocityX = decayFilter(emaVelocityX, 0.02,2);
     
@@ -185,7 +188,7 @@ void orientationAngleCalculation(){
     deltaVelocityX = ((newInputVelocityX - oldInputVelocityX));
     newPositionX = oldPositionX + (oldInputVelocityX *dt) + ((deltaVelocityX/2)*dt);
     emaPositionX = exponentialMovingFilter(newPositionX, 0.2);
-    Serial.println(newPositionX/10000);
+    //Serial.println(newPositionX/1000000);
     
     //////////////////////////////////////////////////////////////
     ////////////////// RESET EVERYTHING HERE /////////////////////
@@ -226,8 +229,11 @@ void dmpDataReady() {
 
 void setup() {
 
+  //////////// condition for microsmooth //////////
+    ptr = ms_init(RDP);
+    if(ptr == NULL) Serial.println("No memory");
     startTime =millis();
-  
+  /////////////////////////////////////////////////
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
