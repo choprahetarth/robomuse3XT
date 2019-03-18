@@ -1,21 +1,7 @@
-float angleFromIMU = 0;
-float angleFromIMUYAW =0;
-float angleFromIMUPITCH =0;
-float angleFromIMUROLL = 0;
-float angleFromIMUYAWInRadians = 0;
-float angleFromIMUPITCHInRadians = 0;
-float angleFromIMUROLLInRadians = 0;
-int initialCounter = 0;
-float initialValue = 0;
-float offsetAngleYAW = 0;
-int readOnceVariable = 1;
 float diffEncIMU = 0.0;
-float feedbackFromIMU =0;
-float newFeedbackFromIMU =0;
 //float totalIMUYAW =30;
 float totalIMUYAW = 0;
 float deltaIMUTheta =0;
-float oldFeedbackFromIMU = 0;
 float newRollFromIMU = 0;
 float deltaIMUROLLTheta =0;
 float oldRollFromIMU =0;
@@ -25,15 +11,7 @@ float totalIMURollTheta =0;
 
 int timeHolder = 0;
 int initializationFlag = 1;
-double initialThetaValue = 0;
-double initialEstimateUncertainity =0;
-double predictedThetaValue =0;
-double originalMeasurement =0;
-double originalMeasurementError =0;
-double originalKalmanGain =0;
-double originalCovariance = 0;
-double estimatedThetaValue = 0;
-double updatedCovariance =0;
+double initialThetaValue, initialEstimateUncertainity, predictedThetaValue, originalMeasurement,originalMeasurementError, originalKalmanGain, originalCovariance, estimatedThetaValue, updatedCovariance;
 int counterAddition = 0;
 
 ///////////////////////////////////////
@@ -56,63 +34,24 @@ double derivativeDeltaRoll = 0;
 
 void navigationMode() {
   while (abs(x) <= 8000 && interApt == 100) {
-    //speedRamp(1,40);
-    startIMUReading(0);
-    //Serial.println(initialValue);
-    if (Serial3.available()){
-      angleFromIMUYAW=Serial3.parseFloat();
-      angleFromIMUPITCH=Serial3.parseFloat();
-      angleFromIMUROLL=Serial3.parseFloat();
-      angleFromIMUYAWInRadians = angleFromIMUYAW * (M_PI/180); 
-      angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
-      angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
-      readOnce();
-      }
-    //Serial.println("Im here");
     safeCheck();
     motionType = "s";
-    //// try to give a ramp input ////
-    //leftMotorSpeed = 10 + rampOutput;
-    //rightMotorSpeed = 10 + rampOutput;
-    //Serial.println(leftMotorSpeed);
-    //Serial.println(rightMotorSpeed);
-    //Serial.println(rampOutput);
+    imuRead();         //// to start reading the IMU 
+    angleProcessing(); //// to start transmitting the angles 
     leftMotorSpeed = 30;
     rightMotorSpeed = 30;
     odometryCalc();
     errorDifference();
     setpoint = 0;
-///////////imu angle increment////////////////////////
-    newFeedbackFromIMU = (((angleFromIMUYAWInRadians)*(-1)*(180/M_PI)))+offsetAngleYAW;
-    deltaIMUTheta = newFeedbackFromIMU - oldFeedbackFromIMU;
-    totalIMUYAW = (totalIMUYAW + deltaIMUTheta);
-    oldFeedbackFromIMU = newFeedbackFromIMU;
-    //Serial.println (offsetAngleYAW);
-    //Serial.println (totalIMUYAW);
-//////////////////////////////////////////////////////
-//////////////// imu roll increment //////////////////
-    newRollFromIMU = (angleFromIMUROLLInRadians)*(180/M_PI);
-    deltaIMUROLLTheta = newRollFromIMU - oldRollFromIMU;
-    totalIMURollTheta = totalIMURollTheta + deltaIMUROLLTheta;
-    oldRollFromIMU = newRollFromIMU;
-    //Serial.print(",");
-    //Serial.println(deltaIMUROLLTheta);
-    //Serial.print(-1.0);
-///////////////////////////////////////////////////////    
-//  newKalmanFilter();
-//  input = (feedbackFromIMU);
+            //newKalmanFilter();
     slipDetection();
-    //input = originalTheta;
-    //input = estimatedThetaValue;
     input = filteredTheta;
     PID_L.Compute(); PID_R.Compute();
     leftMotorSpeed += outputL;
     rightMotorSpeed -= outputR;
     saberTooth.motor(1, leftMotorSpeed);
     saberTooth.motor(2, rightMotorSpeed);
-    //Serial.println(newLeftEncoderValue - (newRightEncoderValue)*(-1));
     delay(0);
-    //Serial.println(originalTheta);
   }
   saberTooth.stop();
   delay(500);
@@ -129,21 +68,7 @@ void speedRamp(float powerOfFunction, float speedValue){
     }
 }
 
-void startIMUReading(int detectPin){
-  if (detectPin == 1){
-    digitalWrite (34,HIGH);
-  }
-  else if(detectPin == 0){
-    digitalWrite (34,LOW);
-    }
-  }
 
-void readOnce(){
-  if (readOnceVariable == 1 ){
-    offsetAngleYAW = angleFromIMUYAWInRadians*(180/M_PI);
-    readOnceVariable = 0;
-    }
-  }
 
 void errorDifference(){
   diffEncIMU = feedbackFromIMU - originalTheta;
@@ -215,11 +140,6 @@ void weightedFilter(){
     if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <15)      {filterValue = alphaQ; /*Serial.println("Low Slippage")*/    ;}
     else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
-    Serial.print(",");
-    Serial.println(originalTheta);
-    Serial.print(totalIMUYAW);
-    Serial.print(",");
-    Serial.print(filteredTheta);
   }
 
 void slipDetection(){
