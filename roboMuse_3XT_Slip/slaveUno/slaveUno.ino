@@ -54,8 +54,11 @@ void orientationAngleCalculation(){
   buttonState = digitalRead(8);
   //Serial.println (buttonState);
   if (buttonState == 0){
+  Serial.print("y");
   Serial.println(currentYaw);
+  Serial.print("p");
   Serial.println(currentPitch);
+  Serial.print("r");
   Serial.println(currentRoll);
     }
   }
@@ -115,17 +118,17 @@ void setup() {
  //   mpu.setYGyroOffset(76);
  //   mpu.setZGyroOffset(-85);
  //   mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
- //     mpu.setXGyroOffset(116);
- //     mpu.setYGyroOffset(69);
- //     mpu.setZGyroOffset(2);
- //     mpu.setZAccelOffset(1788); //// when readings were taken in march start
+      mpu.setXGyroOffset(116);
+      mpu.setYGyroOffset(69);
+      mpu.setZGyroOffset(2);
+      mpu.setZAccelOffset(1788); //// when readings were taken in march start
 
-      mpu.setXGyroOffset(71);
+      /*mpu.setXGyroOffset(71);
       mpu.setYGyroOffset(45);
       mpu.setZGyroOffset(65);
       mpu.setZAccelOffset(1935);
       mpu.setXAccelOffset(-1436);
-      mpu.setYAccelOffset(-2234); ///// spring readings
+      mpu.setYAccelOffset(-2234);*/ ///// spring readings
 
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
