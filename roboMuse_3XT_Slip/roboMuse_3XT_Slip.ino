@@ -71,48 +71,23 @@ PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);
 
 // Odometry Calculation
 void odometryCalc() {
-  //newLeftEncoderValue = double(enCoder_1.read());
   newLeftEncoderValue = double(enCoder_1.read());
   newRightEncoderValue = double(enCoder_2.read());
-  int time = millis();
   leftEncoderIncrement = newLeftEncoderValue - oldLeftEncoderValue;
   rightEncoderIncrement = newRightEncoderValue - oldRightEncoderValue;
-  //Serial.println(newRightEncoderValue);
-  //Serial.println(newLeftEncoderValue);
-  //Serial.print("Left wheel : ");
-  //Serial.println(leftEncoderIncrement);
-  //Serial.print("Right wheel : ");
-  //Serial.println(rightEncoderIncrement);
   leftWheelIncrement = leftEncoderIncrement * conversionFactor; // left side advanced-by-distance
   rightWheelIncrement = rightEncoderIncrement * conversionFactor * (-1); // right side advanced-by-distance
   theta = atan((rightWheelIncrement - leftWheelIncrement) / width);
   theta = theta * (180/M_PI);
-  //Serial.print("Theta : ");
-  //Serial.println(theta);
   feedbackVariable = theta;
   oldLeftEncoderValue = newLeftEncoderValue;
   oldRightEncoderValue = newRightEncoderValue;
-  //Serial.println(theta);
   centreIncremental = ((leftWheelIncrement + rightWheelIncrement) / 2);
-  x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);
-  y = y + centreIncremental * sin(originalTheta + theta / 2);
-  //Serial.println(x);
-  //Serial.println(centreIncremental);
-  // Serial.print ("   ");
-  // Serial.print(y);
+  //x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);   ///ORIGINAL XY
+  //y = y + centreIncremental * sin(originalTheta + theta / 2);                
   originalTheta = originalTheta + theta;
   originalThetaIterable = originalThetaIterable + theta;
-//  if (originalTheta > 6.28) {
-//    originalTheta = originalTheta - 6.28;
-//  }
-//  else if (originalTheta < -6.28) {
-//    originalTheta = originalTheta + 6.28;
-//  }
-//  thetaInRadians = originalTheta * (180 / 3.14);
 }
-
-
-// without time odometry calculation /////
 
 
 /// reset co ordinates ////
@@ -199,6 +174,10 @@ void loop() {
   else if (modeSelected == "n") {
     Serial.println("Mode Selected : Navigation !");
     navigationMode();
+  }
+  else if (modeSelected == "d") {
+    Serial.println("Mode Selected : Debugging !");
+    debugMode();
   }
   else {
     Serial.println("Invalid operand !!\n");
