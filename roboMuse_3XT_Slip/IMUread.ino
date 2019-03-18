@@ -12,9 +12,18 @@ char initializer1,initializer2,initializer3;
 void imuRead(){
   startIMUReading(0);
   if (Serial3.available()){
+      initializer1 = Serial3.read();
       angleFromIMUYAW=Serial3.parseFloat();
+      initializer2 = Serial3.read();
       angleFromIMUPITCH=Serial3.parseFloat();
+      initializer3 = Serial3.read();
       angleFromIMUROLL=Serial3.parseFloat();
+      Serial.println(initializer1,HEX);
+      Serial.println(initializer2,HEX);
+      Serial.println(initializer3,HEX);
+     
+      
+     
       angleFromIMUYAWInRadians = angleFromIMUYAW * (M_PI/180); 
       angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
       angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
