@@ -1,6 +1,4 @@
 float diffEncIMU = 0.0;
-//float totalIMUYAW =30;
-float totalIMUYAW = 0;
 float deltaIMUTheta =0;
 float newRollFromIMU = 0;
 float deltaIMUROLLTheta =0;
@@ -21,7 +19,7 @@ float filterSetPoint = 0;
 float alpha1 , alpha2, alpha3 , alpha4, alphaQ =0;
 float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
 float filterValue =0;
-float filteredTheta = 0;
+float newFilteredTheta, oldFilteredTheta, deltaFilteredTheta;
 
 ///////////////////////////////////////
 ////// Differentiation function variables ////////
@@ -38,8 +36,8 @@ void navigationMode() {
     motionType = "s";
     imuRead();         //// to start reading the IMU 
     angleProcessing(); //// to start transmitting the angles 
-    leftMotorSpeed = 30;
-    rightMotorSpeed = 30;
+    leftMotorSpeed = 50;
+    rightMotorSpeed = 50;
     odometryCalc();
     errorDifference();
     setpoint = 0;
@@ -52,6 +50,7 @@ void navigationMode() {
     saberTooth.motor(1, leftMotorSpeed);
     saberTooth.motor(2, rightMotorSpeed);
     delay(0);
+
   }
   saberTooth.stop();
   delay(500);
@@ -111,7 +110,7 @@ void errorDifference(){
 //////////////////////////////////////////////////////////      
 
     //// Step 1 Measurement //////// runs like a loop
-    originalMeasurement = totalIMUYAW;
+    originalMeasurement = YAW;
     originalMeasurementError = 0.01;
     //// Step 2 Update ////////////
     originalKalmanGain =  originalCovariance /(originalCovariance + originalMeasurementError);
@@ -121,7 +120,7 @@ void errorDifference(){
     //Serial.println(originalKalmanGain);
     //Serial.print(",");
     //Serial.println(estimatedThetaValue);
-    //Serial.print(totalIMUYAW);
+    //Serial.print(YAW);
     //Serial.println(originalKalmanGain);
     //// Step 4 Predict ///////////
     predictedThetaValue  = estimatedThetaValue;
@@ -133,13 +132,22 @@ void weightedFilter(){
     filterSetPoint = 0;
     //sensor priority//
     alpha4 = 1;// complete priority
-    alphaQ = 1*((abs(originalTheta-totalIMUYAW)/(abs(originalTheta-totalIMUYAW)+5)));    // lesser the value of the alpha, more priority to IMU
+    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+5)));    // lesser the value of the alpha, more priority to IMU
     //filter//
     complimentaryMeasurement1 = originalTheta; 
-    complimentaryMeasurement2 = totalIMUYAW;
-    if ( abs(originalTheta - totalIMUYAW) >0.1 && abs(originalTheta - totalIMUYAW) <15)      {filterValue = alphaQ; /*Serial.println("Low Slippage")*/    ;}
-    else if ( abs(originalTheta - totalIMUYAW) >15 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
-    filteredTheta = (1-filterValue)*originalTheta + filterValue*(totalIMUYAW);
+    complimentaryMeasurement2 = YAW;
+    if ( abs(originalTheta - YAW) >0.1 && abs(originalTheta - YAW) <15)      {filterValue = alphaQ; /*Serial.println("Low Slippage")*/    ;}
+    else if ( abs(originalTheta - YAW) >15 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
+    filteredTheta = (1-filterValue)*originalTheta + filterValue*(YAW);
+    newFilteredTheta = filteredTheta;
+    deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
+    oldFilteredTheta = newFilteredTheta;
+    /*Serial.print(",");
+    Serial.println(filteredTheta);
+    Serial.print(",");
+    Serial.print(originalTheta);
+    Serial.print(",");
+    Serial.print(YAW);*/
   }
 
 void slipDetection(){
@@ -158,10 +166,6 @@ void singleDifferentiation(){
   int a = 5;
   timeDiff = timeholder2-timeholder1;
   derivativeDeltaRoll =  deltaIMUROLLTheta / (timeDiff);
-  //Serial.println(derivativeDeltaRoll);
-  //Serial.print(",");
-  //Serial.println(derivativeDeltaRoll);
-  //Serial.print(0.1);
   if (derivativeDeltaRoll > (0.3) || derivativeDeltaRoll < (-0.3)){
     //Serial.print(",");
     Serial.print("PATH DISTURBANCE DETECTED");
