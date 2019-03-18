@@ -3,8 +3,12 @@
 float angleFromIMU, angleFromIMUYAW, angleFromIMUPITCH, angleFromIMUROLL, angleFromIMUYAWInRadians, angleFromIMUPITCHInRadians, angleFromIMUROLLInRadians;  
 int readOnceVariable = 1;
 float offsetAngleYAW, offsetAnglePITCH, offsetAngleROLL;
+float feedbackFromIMU,newFeedbackFromIMU,oldFeedbackFromIMU, deltaAngle, totalAngle;
+float YAW, PITCH, ROLL, incYAW, incPITCH, incROLL;
+char initializer1,initializer2,initializer3;
 
 ////////////////////// IMU READ CODE //////////////////////////////////////
+
 void imuRead(){
   startIMUReading(0);
   if (Serial3.available()){
@@ -15,8 +19,9 @@ void imuRead(){
       angleFromIMUPITCHInRadians = angleFromIMUPITCH * (M_PI/180);
       angleFromIMUROLLInRadians = angleFromIMUROLL * (M_PI/180);
       readOnce();
+    }
   }
-  }
+  
 ///////////////////////////////////////////////////////////////////////////
 ///////////// IMU STARTS TRANSMISSION ONLY WHEN THIS PIN IS HIGH //////////
 
@@ -42,6 +47,25 @@ void readOnce(){
   }
 
 //////////////////////////////////////////////////////////////////////////
-///////////////// ANGLE INCREMENTS ///////////////////////////////////////
-  
-  
+///////////////// IMU ANGLE PROCESSING ///////////////////////////////////
+
+float imuAngleIncrement(float absoluteAngleValue, float offsetAngle){
+    newFeedbackFromIMU = ((absoluteAngleValue)*(-1))+offsetAngle;
+    deltaAngle = newFeedbackFromIMU - oldFeedbackFromIMU;
+    oldFeedbackFromIMU = newFeedbackFromIMU;
+    return deltaAngle;
+  }
+
+float imuAngleAbsolute(float angleValue, float offsetAngle){
+    totalAngle = angleValue*(-1)+offsetAngle;
+    return totalAngle;
+  }
+
+void angleProcessing(){
+    incYAW = imuAngleIncrement(angleFromIMUYAW, offsetAngleYAW);
+    YAW = imuAngleAbsolute(angleFromIMUYAW, offsetAngleYAW);
+    incPITCH = imuAngleIncrement(angleFromIMUPITCH, offsetAnglePITCH);
+    PITCH = imuAngleAbsolute(incPITCH, offsetAnglePITCH);
+    incYAW = imuAngleIncrement(angleFromIMUROLL, offsetAngleROLL);
+    ROLL = imuAngleAbsolute(incROLL,offsetAngleROLL);
+  }
