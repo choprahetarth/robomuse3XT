@@ -19,7 +19,7 @@ float filterSetPoint = 0;
 float alpha1 , alpha2, alpha3 , alpha4, alphaQ =0;
 float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
 float filterValue =0;
-float newFilteredTheta, oldFilteredTheta, deltaFilteredTheta;
+float newFilteredTheta, oldFilteredTheta;
 
 ///////////////////////////////////////
 ////// Differentiation function variables ////////
@@ -36,6 +36,8 @@ void navigationMode() {
     motionType = "s";
     imuRead();         //// to start reading the IMU 
     angleProcessing(); //// to start transmitting the angles 
+ //   recvWithStartEndMarkers();
+ //   showNewData();
     leftMotorSpeed = 50;
     rightMotorSpeed = 50;
     odometryCalc();
