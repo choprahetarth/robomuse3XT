@@ -36,7 +36,8 @@ double oldRightEncoderValue = 0, newRightEncoderValue = 0;
 double leftEncoderIncrement = 0, rightEncoderIncrement = 0;
 float conversionFactor = 0.1;   // rotary to linear
 double leftWheelIncrement = 0, rightWheelIncrement = 0;
-double width = 515;   // distance between wheels
+//double width = 515;   // distance between wheels
+double width = 518;
 double theta = 0;
 float feedbackVariable = 0;    // Error value
 //double orientation_vector[4] = {85,175,265,355};
@@ -83,15 +84,26 @@ void odometryCalc() {
   oldLeftEncoderValue = newLeftEncoderValue;
   oldRightEncoderValue = newRightEncoderValue;
   centreIncremental = ((leftWheelIncrement + rightWheelIncrement) / 2);
-  //x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);   ///ORIGINAL XY
-  //y = y + centreIncremental * sin(originalTheta + theta / 2);                
+  x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);   ///ORIGINAL XY
+  y = y + centreIncremental * sin(originalTheta + theta / 2);                
   originalTheta = originalTheta + theta;
   originalThetaIterable = originalThetaIterable + theta;
 }
 
 
+/// velocity approximation from encoder ticks
+float angularVelocity(){
+  timeDifference = time - millis();
+  Serial.println(timeDifference);
+  newLeftEncoderValue = double(enCoder_1.read());
+  newRightEncoderValue = double(enCoder_2.read());
+  leftEncoderIncrement = newLeftEncoderValue - oldLeftEncoderValue;
+  rightEncoderIncrement = newRightEncoderValue - oldRightEncoderValue;
+  }
+
 /// reset co ordinates ////
 void resetCoordinates() {
+  
   enCoder_1.write(0);
   enCoder_2.write(0);
   oldLeftEncoderValue=0; oldRightEncoderValue=0;
@@ -161,7 +173,7 @@ void loop() {
   interApt=100;
   //modeSelected = Serial.readString();
   delay(0);
-  modeSelected = "n";
+  modeSelected = "d";
   //Serial.println(modeSelected);
   if (modeSelected == "m") {
     Serial.println("Mode Selected : Manual !");
@@ -176,7 +188,7 @@ void loop() {
     navigationMode();
   }
   else if (modeSelected == "d") {
-    Serial.println("Mode Selected : Debugging !");
+    //Serial.println("Mode Selected : Debugging !");
     debugMode();
   }
   else {
