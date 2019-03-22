@@ -1,21 +1,23 @@
 int time=0;
 float filteredTheta,deltaFilteredTheta;
-float lastAngle;
+float lastAngle, clockedAngularVelocity;
 double lastX , lastY;
 
 void debugMode(){
-  while(time<3000 && interApt == 100){
+  while(time<4000 && interApt == 100){
     time = millis();
     safeCheck();        ///// press a to exit the loop
     motionType = "d";   ///// so that the loop does not break
     imuRead();          //// to start reading the IMU 
     angleProcessing();  //// to start transmitting the angles 
-    leftMotorSpeed = 40;  
-    rightMotorSpeed = 40;
+    leftMotorSpeed   = 40;  
+    rightMotorSpeed  = 40;
     odometryCalc();
+    velocityApproximation();   /// to find out the relationship between velocity and the battery level
+        if (time >2000 && time < 3000){clockedAngularVelocity = velocityCentre;}
          //newKalmanFilter();
-         Serial.println(filteredTheta);
     slipDetection();
+     Serial.println(filteredTheta);
     input = filteredTheta;
     PID_L.Compute(); PID_R.Compute();
     leftMotorSpeed += outputL;
@@ -28,29 +30,12 @@ void debugMode(){
     saberTooth.stop();
     delay(1000);
     //Serial.println("I am out");
-    readOnceVariable = 1;
+    Serial.println(clockedAngularVelocity);
+    /*readOnceVariable = 1;
     lastAngle = filteredTheta;
     lastX = x;
     lastY = y;
-   while (time < 10000){
-    Serial.println("i am here...");
-        
-        imuRead();          //// to start reading the IMU 
-        angleProcessing();
-        odometryCalc();
-        slipDetection();
-         x =  x + centreIncremental * cos( filteredTheta + deltaFilteredTheta / 2)*(-1);   ///FILTERED XY
-         y =  y + centreIncremental * sin( filteredTheta + deltaFilteredTheta / 2);
-        calSpeed(-30, 30, filteredTheta);
-        saberTooth.motor(1, -speedTurn-5);
-        saberTooth.motor(2, speedTurn+5);
-        //Serial.println(filteredTheta);
-    }
-    /*Serial.print(",");
-    Serial.println(lastX + x);
-    Serial.print(",");
-    Serial.print(lastY +y);
-    Serial.print(",");
-    Serial.print(lastAngle+filteredTheta);*/
-   
+    Serial.print("FINAL ANGLE IS : ");
+    Serial.println(lastAngle);*/
+    
   }
