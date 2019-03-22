@@ -104,11 +104,11 @@ void velocityApproximation(){
   angularVelocityLeft = leftEncoderIncrement / dt;
   angularVelocityRight = rightEncoderIncrement / dt;
   angularVelocityCentre = centreIncremental / dt;
-  velocityLeft = radius*
+  velocityLeft = angularVelocityLeft * 63.5;     63.5 being the total radius of the wheel in milimeters.
+  velocityRight = angularVelocityRight * 63.5;
+  velocityCentre = angularVelocityCentre * 63.5;   
+  Serial.println(velocityCentre);
   startTime = currentTime;
-  Serial.println(angularVelocityLeft);
-  Serial.println(angularVelocityRight);
-  Serial.println(angularVelocityCentre);
   }
 
 /// reset co ordinates ////
