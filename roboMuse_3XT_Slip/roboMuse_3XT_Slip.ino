@@ -28,7 +28,6 @@ float non_inc_theta = 0;
 // Odometry Variables
 double speedTurn = 0, prevTheta = 0;
 double centreIncremental = 0, x = 0, y = 0;
-//double originalTheta = 30; 
 double originalTheta = 0; 
 double thetaInRadians = 0;
 double oldLeftEncoderValue = 0, newLeftEncoderValue = 0;
@@ -69,6 +68,11 @@ PID PID_L(&input, &outputL, &setpoint, KpL, KiL, KdL, P_ON_M, DIRECT); // Direct
 PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);
 
 
+/////angular velocity calculation variables/// 
+int startTime, currentTime, dt;
+double angularVelocityLeft, angularVelocityRight, angularVelocityCentre;
+
+
 
 // Odometry Calculation
 void odometryCalc() {
@@ -92,18 +96,23 @@ void odometryCalc() {
 
 
 /// velocity approximation from encoder ticks
-float angularVelocity(){
-  timeDifference = time - millis();
-  Serial.println(timeDifference);
-  newLeftEncoderValue = double(enCoder_1.read());
-  newRightEncoderValue = double(enCoder_2.read());
-  leftEncoderIncrement = newLeftEncoderValue - oldLeftEncoderValue;
-  rightEncoderIncrement = newRightEncoderValue - oldRightEncoderValue;
+
+void velocityApproximation(){
+  currentTime = millis();
+  //dt = currentTime-startTime;
+  dt=30;  //////DETERMINE THIS EXPERIMENTALLY BEFORE TRYING IT OUT YOURSELVES
+  angularVelocityLeft = leftEncoderIncrement / dt;
+  angularVelocityRight = rightEncoderIncrement / dt;
+  angularVelocityCentre = centreIncremental / dt;
+  velocityLeft = radius*
+  startTime = currentTime;
+  Serial.println(angularVelocityLeft);
+  Serial.println(angularVelocityRight);
+  Serial.println(angularVelocityCentre);
   }
 
 /// reset co ordinates ////
 void resetCoordinates() {
-  
   enCoder_1.write(0);
   enCoder_2.write(0);
   oldLeftEncoderValue=0; oldRightEncoderValue=0;
@@ -116,7 +125,7 @@ void resetCoordinates() {
 }
 
 
-//Used to calculate the turning speed
+//// Used to calculate the turning speed
 
 void calSpeed (double angle, double maxspeed, double theta) {
   speedTurn = (int) (maxspeed - ((maxspeed - 15) / abs(angle)) * abs(theta));
@@ -128,6 +137,7 @@ void calSpeed (double angle, double maxspeed, double theta) {
 }
 
 void setup() {
+  startTime = millis();
   Serial.begin(115200);   // Serial communication with rasPi
   Serial2.begin(9600);  // Serial communication with Sabertooth motor driver, default baud rate
   Serial3.begin(115200);  // Serial Communication with the Arduino Uno for I2C with IMU
@@ -173,7 +183,7 @@ void loop() {
   interApt=100;
   //modeSelected = Serial.readString();
   delay(0);
-  modeSelected = "d";
+  modeSelected = "n";
   //Serial.println(modeSelected);
   if (modeSelected == "m") {
     Serial.println("Mode Selected : Manual !");
