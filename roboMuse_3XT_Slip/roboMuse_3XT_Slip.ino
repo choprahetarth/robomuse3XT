@@ -33,7 +33,8 @@ double thetaInRadians = 0;
 double oldLeftEncoderValue = 0, newLeftEncoderValue = 0;
 double oldRightEncoderValue = 0, newRightEncoderValue = 0;
 double leftEncoderIncrement = 0, rightEncoderIncrement = 0;
-float conversionFactor = 0.1;   // rotary to linear
+//float conversionFactor = 0.1;   // rotary to linear
+float conversionFactor = 0.1994;
 double leftWheelIncrement = 0, rightWheelIncrement = 0;
 //double width = 515;   // distance between wheels
 double width = 518;
@@ -70,7 +71,8 @@ PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);
 
 /////angular velocity calculation variables/// 
 int startTime, currentTime, dt;
-double angularVelocityLeft, angularVelocityRight, angularVelocityCentre;
+double angularVelocityLeft, angularVelocityRight, angularVelocityCentre, velocityLeft, velocityRight, velocityCentre;
+double velocityLeftWheel, velocityRightWheel, centreWheelVelocity;
 
 
 
@@ -101,13 +103,22 @@ void velocityApproximation(){
   currentTime = millis();
   //dt = currentTime-startTime;
   dt=30;  //////DETERMINE THIS EXPERIMENTALLY BEFORE TRYING IT OUT YOURSELVES
-  angularVelocityLeft = leftEncoderIncrement / dt;
+  
+  /*angularVelocityLeft = leftEncoderIncrement / dt;
   angularVelocityRight = rightEncoderIncrement / dt;
   angularVelocityCentre = centreIncremental / dt;
-  velocityLeft = angularVelocityLeft * 63.5;     63.5 being the total radius of the wheel in milimeters.
+  
+  velocityLeft = angularVelocityLeft * 63.5;     //63.5 being the total radius of the wheel in milimeters.
   velocityRight = angularVelocityRight * 63.5;
-  velocityCentre = angularVelocityCentre * 63.5;   
-  Serial.println(velocityCentre);
+  velocityCentre = angularVelocityCentre * 63.5;*/
+  
+  velocityLeftWheel = leftWheelIncrement / dt;
+  velocityRightWheel = rightWheelIncrement / dt;
+  centreWheelVelocity = (velocityLeftWheel + velocityRightWheel)/2;
+  
+  Serial.print("new velocity:");
+  Serial.println(centreWheelVelocity);
+
   startTime = currentTime;
   }
 
@@ -183,7 +194,7 @@ void loop() {
   interApt=100;
   //modeSelected = Serial.readString();
   delay(0);
-  modeSelected = "n";
+  modeSelected = "d";
   //Serial.println(modeSelected);
   if (modeSelected == "m") {
     Serial.println("Mode Selected : Manual !");
