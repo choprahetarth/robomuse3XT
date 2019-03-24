@@ -119,6 +119,8 @@ void velocityApproximation(){
   Serial.print("new velocity:");
   Serial.println(centreWheelVelocity);
 
+  Serial.print("old velocity: ");
+  Serial.println(63.5*(centreWheelVelocity/2));
   startTime = currentTime;
   }
 
