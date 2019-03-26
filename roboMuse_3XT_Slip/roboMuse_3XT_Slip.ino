@@ -33,8 +33,10 @@ double thetaInRadians = 0;
 double oldLeftEncoderValue = 0, newLeftEncoderValue = 0;
 double oldRightEncoderValue = 0, newRightEncoderValue = 0;
 double leftEncoderIncrement = 0, rightEncoderIncrement = 0;
-//float conversionFactor = 0.1;   // rotary to linear
-float conversionFactor = 0.1994;
+float conversionFactorLeft = 0.1;   // rotary to linear
+//float conversionFactorRight = 0.0989;
+float conversionFactorRight = 0.1;
+
 double leftWheelIncrement = 0, rightWheelIncrement = 0;
 //double width = 515;   // distance between wheels
 double width = 518;
@@ -82,8 +84,8 @@ void odometryCalc() {
   newRightEncoderValue = double(enCoder_2.read());
   leftEncoderIncrement = newLeftEncoderValue - oldLeftEncoderValue;
   rightEncoderIncrement = newRightEncoderValue - oldRightEncoderValue;
-  leftWheelIncrement = leftEncoderIncrement * conversionFactor; // left side advanced-by-distance
-  rightWheelIncrement = rightEncoderIncrement * conversionFactor * (-1); // right side advanced-by-distance
+  leftWheelIncrement = leftEncoderIncrement * conversionFactorLeft; // left side advanced-by-distance
+  rightWheelIncrement = rightEncoderIncrement * conversionFactorRight * (-1); // right side advanced-by-distance
   theta = atan((rightWheelIncrement - leftWheelIncrement) / width);
   theta = theta * (180/M_PI);
   feedbackVariable = theta;
@@ -116,11 +118,14 @@ void velocityApproximation(){
   velocityRightWheel = rightWheelIncrement / dt;
   centreWheelVelocity = (velocityLeftWheel + velocityRightWheel)/2;
   
-  Serial.print("new velocity:");
-  Serial.println(centreWheelVelocity);
+  //Serial.print("new velocity:");
+  //Serial.println(centreWheelVelocity);
 
-  Serial.print("old velocity: ");
-  Serial.println(63.5*(centreWheelVelocity/2));
+//  Serial.print("accurate velocity:");
+//  Serial.println(centreWheelVelocity*2);
+
+  //Serial.print("old velocity: ");
+//  Serial.println(63.5*(centreWheelVelocity/2));
   startTime = currentTime;
   }
 
@@ -196,7 +201,7 @@ void loop() {
   interApt=100;
   //modeSelected = Serial.readString();
   delay(0);
-  modeSelected = "d";
+  modeSelected = "n";
   //Serial.println(modeSelected);
   if (modeSelected == "m") {
     Serial.println("Mode Selected : Manual !");
