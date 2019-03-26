@@ -32,15 +32,16 @@ double derivativeDeltaRoll = 0;
 
 void navigationMode() {
   while (abs(x) <= 8000 && interApt == 100) {
+  //while (time < 5000 && interApt == 100) {
+    time = millis();
     safeCheck();
     motionType = "s";
     imuRead();         //// to start reading the IMU 
     angleProcessing(); //// to start transmitting the angles 
- //   recvWithStartEndMarkers();
- //   showNewData();
     leftMotorSpeed = 50;
     rightMotorSpeed = 50;
     odometryCalc();
+    velocityApproximation();
     errorDifference();
     setpoint = 0;
             //newKalmanFilter();
@@ -134,7 +135,7 @@ void weightedFilter(){
     filterSetPoint = 0;
     //sensor priority//
     alpha4 = 1;// complete priority
-    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+5)));    // lesser the value of the alpha, more priority to IMU
+    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+4)));    // lesser the value of the alpha, more priority to IMU
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = YAW;
@@ -150,11 +151,18 @@ void weightedFilter(){
     Serial.print(originalTheta);
     Serial.print(",");
     Serial.print(YAW);*/
+    Serial.print("FILTERED VALUE :");
+    Serial.println(filteredTheta);
+    Serial.print("ENCODER THETA: ");
+    Serial.println(originalTheta);
+    Serial.print("IMU THETA: ");
+    Serial.println(YAW);
+    
   }
 
 void slipDetection(){
     /// condition 1 : when there is a change in pitch  
-        singleDifferentiation();
+        //singleDifferentiation();
     /// condition 2 : when there is a difference between the wheels
         weightedFilter();
     /// condition 3 : when the actual odometries dont match 
