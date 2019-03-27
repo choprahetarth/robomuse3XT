@@ -18,7 +18,7 @@ int counterAddition = 0;
 float filterSetPoint = 0;
 float alpha1 , alpha2, alpha3 , alpha4, alphaQ =0;
 float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
-float filterValue =0;
+float filterValue =0, gainValue = 0;
 float newFilteredTheta, oldFilteredTheta;
 
 ///////////////////////////////////////
@@ -38,8 +38,8 @@ void navigationMode() {
     motionType = "s";
     imuRead();         //// to start reading the IMU 
     angleProcessing(); //// to start transmitting the angles 
-    leftMotorSpeed = 50;
-    rightMotorSpeed = 50;
+    leftMotorSpeed = 30;
+    rightMotorSpeed = 30;
     odometryCalc();
     velocityApproximation();
     errorDifference();
@@ -135,7 +135,14 @@ void weightedFilter(){
     filterSetPoint = 0;
     //sensor priority//
     alpha4 = 1;// complete priority
-    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+4)));    // lesser the value of the alpha, more priority to IMU
+    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+gainValue)));    // lesser the value of the alpha, more priority to IMU
+    if(centreWheelVelocity < 0.20){
+          gainValue = 5;
+      }
+    else {
+          gainValue = 5*(0.2/centreWheelVelocity); 
+      }
+
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = YAW;
@@ -145,19 +152,18 @@ void weightedFilter(){
     newFilteredTheta = filteredTheta;
     deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
     oldFilteredTheta = newFilteredTheta;
-    /*Serial.print(",");
+    Serial.print(",");
     Serial.println(filteredTheta);
     Serial.print(",");
     Serial.print(originalTheta);
     Serial.print(",");
-    Serial.print(YAW);*/
-    Serial.print("FILTERED VALUE :");
+    Serial.print(YAW);
+    /*Serial.print("FILTERED VALUE :");
     Serial.println(filteredTheta);
     Serial.print("ENCODER THETA: ");
     Serial.println(originalTheta);
     Serial.print("IMU THETA: ");
-    Serial.println(YAW);
-    
+    Serial.println(YAW);*/
   }
 
 void slipDetection(){
