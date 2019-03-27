@@ -13,14 +13,6 @@ int count;
 void imuRead(){
   startIMUReading(0);
   if (Serial3.available()){
-    /*if(Serial3.peek()=='y'){ Serial3.read();angleFromIMUYAW=Serial3.read();}
-    else if(Serial3.peek()=='p'){ Serial3.read();angleFromIMUPITCH=Serial3.read();}
-    else if(Serial3.peek()=='r'){ Serial3.read();angleFromIMUROLL=Serial3.read();}
-    else{Serial3.read();}
-    Serial.println(angleFromIMUYAW);*/
-    //Serial.println(Serial3.peek());
-    //Serial.println(Serial3.peek());
-    //Serial.println(Serial3.peek());
     angleFromIMUYAW=Serial3.parseFloat();
     angleFromIMUPITCH=Serial3.parseFloat();
     angleFromIMUROLL=Serial3.parseFloat();
@@ -47,7 +39,7 @@ void startIMUReading(int detectPin){
 //////////// GET THE INITAL OFFSET VALUES /////////////////////////////////
 
 void readOnce(){
-  if (readOnceVariable == 1 ){
+  if ( readOnceVariable == 1 ){
     offsetAngleYAW = angleFromIMUYAW;
     offsetAnglePITCH = angleFromIMUPITCH;
     offsetAngleROLL =angleFromIMUROLL;
@@ -75,10 +67,10 @@ float imuAngleAbsolute(float angleValue, float offsetAngle){
 void angleProcessing(){
     incYAW = imuAngleIncrement(angleFromIMUYAW, offsetAngleYAW);
     YAW = imuAngleAbsolute(angleFromIMUYAW, offsetAngleYAW);
-    incPITCH = imuAngleIncrement(angleFromIMUPITCH, offsetAnglePITCH);
-    PITCH = imuAngleAbsolute(incPITCH, offsetAnglePITCH);
-    incYAW = imuAngleIncrement(angleFromIMUROLL, offsetAngleROLL);
-    ROLL = imuAngleAbsolute(incROLL,offsetAngleROLL);
+    //incPITCH = imuAngleIncrement(angleFromIMUPITCH, offsetAnglePITCH);
+    //PITCH = imuAngleAbsolute(incPITCH, offsetAnglePITCH);
+    //incROLL = imuAngleIncrement(angleFromIMUROLL, offsetAngleROLL);
+    //ROLL = imuAngleAbsolute(incROLL,offsetAngleROLL);
   }
 
 ///////////// SIGNAL RECEPTION FUNCTION ////////////////////////////////
