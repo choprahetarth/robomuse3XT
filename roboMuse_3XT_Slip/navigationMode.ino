@@ -29,6 +29,11 @@ double derivativeDeltaRoll = 0;
 
 ////////////////////////////////////////////////
 
+//////////// Y Pose estimation /////////////////
+
+
+////////////////////////////////////////////////
+
 
 void navigationMode() {
   while (abs(x) <= 8000 && interApt == 100) {
@@ -135,29 +140,32 @@ void weightedFilter(){
     filterSetPoint = 0;
     //sensor priority//
     alpha4 = 1;// complete priority
-    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+gainValue)));    // lesser the value of the alpha, more priority to IMU
+    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+gainValue)));    // lesser the value of the gain Value, more priority to Encoders
     if(centreWheelVelocity < 0.20){
           gainValue = 5;
       }
     else {
-          gainValue = 5*(0.2/centreWheelVelocity); 
+          gainValue = 0.1/centreWheelVelocity;
+          //Serial.println(gainValue);
       }
 
     //filter//
     complimentaryMeasurement1 = originalTheta; 
     complimentaryMeasurement2 = YAW;
-    if ( abs(originalTheta - YAW) >0.1 && abs(originalTheta - YAW) <15)      {filterValue = alphaQ; /*Serial.println("Low Slippage")*/    ;}
-    else if ( abs(originalTheta - YAW) >15 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
+    if ( abs(originalTheta - YAW) >0.1 && abs(originalTheta - YAW) <10)      {filterValue = alphaQ; /*Serial.println("Low Slippage")*/    ;}
+    else if ( abs(originalTheta - YAW) >10 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(YAW);
     newFilteredTheta = filteredTheta;
     deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
     oldFilteredTheta = newFilteredTheta;
-    Serial.print(",");
+    Serial.print("FILTER");
     Serial.println(filteredTheta);
-    Serial.print(",");
-    Serial.print(originalTheta);
-    Serial.print(",");
-    Serial.print(YAW);
+    //Serial.print("ENCODER");
+    //Serial.print(originalTheta);
+    //Serial.print("YAW");
+    //Serial.print(YAW);
+    //Serial.print(",");
+    //Serial.print(gainValue);
     /*Serial.print("FILTERED VALUE :");
     Serial.println(filteredTheta);
     Serial.print("ENCODER THETA: ");
