@@ -4,6 +4,11 @@ float newRollFromIMU = 0;
 float deltaIMUROLLTheta =0;
 float oldRollFromIMU =0;
 float totalIMURollTheta =0;
+///////// y pose estiate variables /////
+int poseTimer;
+float position1, position2, positionPredicted, alphaY;
+float endYPose, speed1, angularSpeed, rotationTime, translationTime;
+///////////////////////////////////////
 
 ////// Kalman Filter Variables ////////
 
@@ -31,6 +36,28 @@ double derivativeDeltaRoll = 0;
 
 //////////// Y Pose estimation /////////////////
 
+void yPoseEstimate(){
+    poseTimer = millis(); 
+    Serial.println(poseTimer);
+       position1 = poseCalculate(1,centreWheelVelocity);
+       position2 = poseCalculate(2,centreWheelVelocity);
+       positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
+  }
+
+float poseCalculate(int choice, float speed1){
+      angularSpeed = (speed1 / 0.259);
+      rotationTime = (filteredTheta / angularSpeed );
+      translationTime = (5 - rotationTime);
+      if (choice == 1){
+          endYPose = (0.256*(1-cos(filteredTheta)))*1000;
+        }
+      else if (choice == 2){
+          endYPose = ((0.256*(1-cos(filteredTheta)))+(speed1*translationTime*sin(filteredTheta)))*1000;
+        }
+      return endYPose;
+  }
+
+///////////////////////////////////////////////
 
 ////////////////////////////////////////////////
 
