@@ -37,11 +37,13 @@ double derivativeDeltaRoll = 0;
 //////////// Y Pose estimation /////////////////
 
 void yPoseEstimate(){
-    poseTimer = millis(); 
-    Serial.println(poseTimer);
+    poseTimer++;
+      if(poseTimer % 10 ==0 ){
+        Serial.println("i am here");
        position1 = poseCalculate(1,centreWheelVelocity);
        position2 = poseCalculate(2,centreWheelVelocity);
        positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
+       }
   }
 
 float poseCalculate(int choice, float speed1){
@@ -185,14 +187,14 @@ void weightedFilter(){
     newFilteredTheta = filteredTheta;
     deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
     oldFilteredTheta = newFilteredTheta;
-    Serial.print("FILTER");
-    Serial.println(filteredTheta);
-    //Serial.print("ENCODER");
+    //Serial.print("FILTER");
+    //Serial.println(filteredTheta);
+    /*//Serial.print("ENCODER");
     //Serial.print(originalTheta);
     //Serial.print("YAW");
     //Serial.print(YAW);
     //Serial.print(",");
-    //Serial.print(gainValue);
+    //Serial.print(gainValue);*/
     /*Serial.print("FILTERED VALUE :");
     Serial.println(filteredTheta);
     Serial.print("ENCODER THETA: ");
