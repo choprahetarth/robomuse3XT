@@ -1,10 +1,10 @@
 int time=0;
 float filteredTheta,deltaFilteredTheta;
-float lastAngle, clockedAngularVelocity;
+float lastAngle, clockedVelocity ;
 double lastX , lastY;
 
 void debugMode(){
-  while(time<4000 && interApt == 100){
+  while(time<4000  && interApt == 100){
     time = millis();
     safeCheck();        ///// press a to exit the loop
     motionType = "d";   ///// so that the loop does not break
@@ -14,10 +14,10 @@ void debugMode(){
     rightMotorSpeed  = 40;
     odometryCalc();
     velocityApproximation();   /// to find out the relationship between velocity and the battery level
-        if (time >2000 && time < 3000){clockedAngularVelocity = velocityCentre;}
+        if (time >3000 && time < 3999){ clockedVelocity  =  velocityCentre;} ///check out the final vecloity of the vehicle 
          //newKalmanFilter();
     slipDetection();
-     Serial.println(filteredTheta);
+    yPoseEstimate();
     input = filteredTheta;
     PID_L.Compute(); PID_R.Compute();
     leftMotorSpeed += outputL;
@@ -30,12 +30,16 @@ void debugMode(){
     saberTooth.stop();
     delay(1000);
     //Serial.println("I am out");
-    Serial.println(clockedAngularVelocity);
-    /*readOnceVariable = 1;
+    //Serial.println(clockedVelocity);
+    readOnceVariable = 1;
     lastAngle = filteredTheta;
     lastX = x;
     lastY = y;
-    Serial.print("FINAL ANGLE IS : ");
-    Serial.println(lastAngle);*/
+    /*Serial.print("FINAL ANGLE IS : ");
+    Serial.println(lastAngle);
+    Serial.print("THE FINAL CLOCKED VELOCITY I :");
+    Serial.println(clockedVelocity);
+    Serial.print("The distance travelled is:");
+    Serial.println(sqrt((lastX*lastX)+ (lastY+lastY)));*/
     
   }
