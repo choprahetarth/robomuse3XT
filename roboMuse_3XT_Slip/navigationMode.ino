@@ -4,6 +4,12 @@ float newRollFromIMU = 0;
 float deltaIMUROLLTheta =0;
 float oldRollFromIMU =0;
 float totalIMURollTheta =0;
+///////// y pose estiate variables /////
+int poseTimer, oldPoseTimer, poseCount;
+double changeInTime, dtInSeconds;
+double position1, position2, positionPredicted, alphaY;
+double endYPose, speed1, angularSpeed, rotationTime, translationTime;
+///////////////////////////////////////
 
 ////// Kalman Filter Variables ////////
 
@@ -19,7 +25,7 @@ float filterSetPoint = 0;
 float alpha1 , alpha2, alpha3 , alpha4, alphaQ =0;
 float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
 float filterValue =0, gainValue = 0;
-float newFilteredTheta, oldFilteredTheta;
+float newFilteredTheta, oldFilteredTheta, filteredThetaInRadians;
 
 ///////////////////////////////////////
 ////// Differentiation function variables ////////
@@ -31,6 +37,50 @@ double derivativeDeltaRoll = 0;
 
 //////////// Y Pose estimation /////////////////
 
+void yPoseEstimate(){
+    poseCount++;
+    alphaY = 0.7927190893;   /// calculated experimentaly from the data in the excel sheet 
+    poseTimer = millis();
+      if(poseCount % 10 ==0 ){
+       changeInTime = (poseTimer - oldPoseTimer); ////divided by 1000 to convert to seconds 
+       dtInSeconds = changeInTime / 1000 ;
+       //position1 = poseCalculate(1, dtInSeconds,centreWheelVelocity);
+       position2 = poseCalculate(2, dtInSeconds,centreWheelVelocity);
+       //positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
+       Serial.print("ANGULAR SPEED: ");
+       Serial.println(angularSpeed);
+       Serial.print("ROTATION TIME : ");
+       Serial.print(rotationTime);
+       Serial.print("TRANSLATION TIME : ");
+       Serial.print(translationTime);
+       oldPoseTimer = poseTimer;
+       }
+  }
+
+float poseCalculate(int choice, float timeDifference  ,float speed1){
+      angularSpeed = (speed1 / 0.259);
+      if(angularSpeed == 0){
+        rotationTime = 0;
+        translationTime = timeDifference; //// the rotation time is calculated using the (poseTimer-oldPoseTimer)/1000
+        }
+      else{
+      rotationTime = (filteredThetaInRadians / angularSpeed );  /// this will be infinity when the abgular speed is zero. 
+      translationTime = (timeDifference - rotationTime); 
+        }  
+             if (choice == 1){
+                endYPose = (0.256*(1-cos(filteredThetaInRadians)))*1000;
+                 }
+              else if (choice == 2){
+                endYPose = ((0.256*(1-cos(filteredThetaInRadians)))+(speed1*translationTime*sin(filteredThetaInRadians)))*1000;
+                 }
+      return endYPose;
+  }
+
+
+////// to be addded, an additional PID to correct the y pose estimate ////// 
+
+
+///////////////////////////////////////////////
 
 ////////////////////////////////////////////////
 
@@ -109,12 +159,6 @@ void errorDifference(){
       } 
 
       
-///////// code in case the imu sensor is thrown away /////  
-   if (!Serial3.available()){
-      originalKalmanGain=1;
-      predictedThetaValue = originalTheta;
-      Serial.println("Switched to Encoder Navigation");
-      }
 //////////////////////////////////////////////////////////      
 
     //// Step 1 Measurement //////// runs like a loop
@@ -156,10 +200,11 @@ void weightedFilter(){
     else if ( abs(originalTheta - YAW) >10 )                                         {filterValue = alpha4; /*Serial.println("Odometry Lost")*/   ;}
     filteredTheta = (1-filterValue)*originalTheta + filterValue*(YAW);
     newFilteredTheta = filteredTheta;
+    filteredThetaInRadians = filteredTheta * (M_PI/180);
     deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
     oldFilteredTheta = newFilteredTheta;
-    Serial.print("FILTER");
-    Serial.println(filteredTheta);
+    //Serial.print("FILTER");
+    //Serial.println(filteredTheta);
     //Serial.print("ENCODER");
     //Serial.print(originalTheta);
     //Serial.print("YAW");
@@ -181,6 +226,8 @@ void slipDetection(){
         weightedFilter();
     /// condition 3 : when the actual odometries dont match 
         // insert the INS Function once it is completed
+    /// condition 4 : in case the imu sensor is plugged off and thrown away 
+        plugAndPlay();
   }
 
 void singleDifferentiation(){
@@ -197,3 +244,11 @@ void singleDifferentiation(){
     
     }
 }
+
+void plugAndPlay(){
+    if (!Serial3.available()){
+      filterValue = 0; /// full priority to the encoders
+      Serial.println("Switched to Encoder Navigation");
+      }
+      
+      }
