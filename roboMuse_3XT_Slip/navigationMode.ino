@@ -41,17 +41,19 @@ void yPoseEstimate(){
     poseCount++;
     alphaY = 0.7927190893;   /// calculated experimentaly from the data in the excel sheet 
     poseTimer = millis();
-      if(poseCount % 10 ==0 ){
+      if(poseCount % 1 ==0 ){
        changeInTime = (poseTimer - oldPoseTimer); ////divided by 1000 to convert to seconds 
        dtInSeconds = changeInTime / 1000 ;
-       //position1 = poseCalculate(1, dtInSeconds,centreWheelVelocity);
+       position1 = poseCalculate(1, dtInSeconds,centreWheelVelocity);
        position2 = poseCalculate(2, dtInSeconds,centreWheelVelocity);
-       //positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
-       Serial.print("ANGULAR SPEED: ");
-       Serial.println(angularSpeed);
-       Serial.print("ROTATION TIME : ");
+       positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
+       Serial.print(" POSITION 2:  ");
+       Serial.println(position2);
+       Serial.print(" POSITION 1:  ");
+       Serial.print(position1);
+       Serial.print(" ROTATION TIME:  ");
        Serial.print(rotationTime);
-       Serial.print("TRANSLATION TIME : ");
+       Serial.print(" TRANSLATION TIME:   ");
        Serial.print(translationTime);
        oldPoseTimer = poseTimer;
        }
@@ -64,8 +66,8 @@ float poseCalculate(int choice, float timeDifference  ,float speed1){
         translationTime = timeDifference; //// the rotation time is calculated using the (poseTimer-oldPoseTimer)/1000
         }
       else{
-      rotationTime = (filteredThetaInRadians / angularSpeed );  /// this will be infinity when the abgular speed is zero. 
-      translationTime = (timeDifference - rotationTime); 
+      rotationTime = (filteredThetaInRadians / angularSpeed);  /// this will be infinity when the angular speed is zero. 
+      translationTime = (timeDifference - rotationTime);    //// error is present over here anyway
         }  
              if (choice == 1){
                 endYPose = (0.256*(1-cos(filteredThetaInRadians)))*1000;
@@ -221,7 +223,7 @@ void weightedFilter(){
 
 void slipDetection(){
     /// condition 1 : when there is a change in pitch  
-        //singleDifferentiation();
+        //singleDifferentiation();x
     /// condition 2 : when there is a difference between the wheels
         weightedFilter();
     /// condition 3 : when the actual odometries dont match 
