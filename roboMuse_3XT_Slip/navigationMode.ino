@@ -5,9 +5,9 @@ float deltaIMUROLLTheta =0;
 float oldRollFromIMU =0;
 float totalIMURollTheta =0;
 ///////// y pose estiate variables /////
-int poseTimer;
-float position1, position2, positionPredicted, alphaY;
-float endYPose, speed1, angularSpeed, rotationTime, translationTime;
+int poseTimer, oldPoseTimer, poseCount;
+double position1, position2, positionPredicted, alphaY;
+double endYPose, speed1, angularSpeed, rotationTime, translationTime;
 ///////////////////////////////////////
 
 ////// Kalman Filter Variables ////////
@@ -37,27 +37,40 @@ double derivativeDeltaRoll = 0;
 //////////// Y Pose estimation /////////////////
 
 void yPoseEstimate(){
-    poseTimer++;
-      if(poseTimer % 10 ==0 ){
-        Serial.println("i am here");
-       position1 = poseCalculate(1,centreWheelVelocity);
-       position2 = poseCalculate(2,centreWheelVelocity);
+    poseCount++;
+    alphaY = 0.7927190893;   /// calculated experimentaly from the data
+    poseTimer = millis();
+      if(poseCount % 10 ==0 ){
+       dt = (poseTimer - oldPoseTimer)/1000; ////divided by 1000 to convert to seconds  
+       position1 = poseCalculate(1, dt,centreWheelVelocity);
+       position2 = poseCalculate(2, dt,centreWheelVelocity);
        positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
+       oldPoseTimer = poseTimer;
        }
   }
 
-float poseCalculate(int choice, float speed1){
+float poseCalculate(int choice, float timeDifference  ,float speed1){
       angularSpeed = (speed1 / 0.259);
-      rotationTime = (filteredTheta / angularSpeed );
-      translationTime = (5 - rotationTime);
-      if (choice == 1){
-          endYPose = (0.256*(1-cos(filteredTheta)))*1000;
+      if(angularSpeed == 0){
+        rotationTime = 0;
+        translationTime = timeDifference; //// the rotation time is calculated using the (poseTimer-oldPoseTimer)/1000
         }
-      else if (choice == 2){
-          endYPose = ((0.256*(1-cos(filteredTheta)))+(speed1*translationTime*sin(filteredTheta)))*1000;
-        }
+      else{
+      rotationTime = (filteredTheta / angularSpeed );  /// this will be infinity when the abgular speed is zero. 
+      translationTime = (timeDifference - rotationTime); 
+        }  
+             if (choice == 1){
+                endYPose = (0.256*(1-cos(filteredTheta)))*1000;
+                 }
+              else if (choice == 2){
+                endYPose = ((0.256*(1-cos(filteredTheta)))+(speed1*translationTime*sin(filteredTheta)))*1000;
+                 }
       return endYPose;
   }
+
+
+////// to be addded, an additional PID to correct the y pose estimate ////// 
+
 
 ///////////////////////////////////////////////
 
