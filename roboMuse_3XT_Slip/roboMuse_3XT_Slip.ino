@@ -117,15 +117,8 @@ void velocityApproximation(){
   velocityLeftWheel = leftWheelIncrement / dt;
   velocityRightWheel = rightWheelIncrement / dt;
   centreWheelVelocity = (velocityLeftWheel + velocityRightWheel)/2;
-  
-    //Serial.print("new velocity:");
-    //Serial.println(centreWheelVelocity);
-
-//  Serial.print("accurate velocity:");
-//  Serial.println(centreWheelVelocity*2);
-
-  //Serial.print("old velocity: ");
-//  Serial.println(63.5*(centreWheelVelocity/2));
+  //Serial.print("new velocity:");
+  //Serial.println(centreWheelVelocity);
   startTime = currentTime;
   }
 
@@ -201,7 +194,7 @@ void loop() {
   interApt=100;
   //modeSelected = Serial.readString();
   delay(0);
-  modeSelected = "n";
+  modeSelected = "d";
   //Serial.println(modeSelected);
   if (modeSelected == "m") {
     Serial.println("Mode Selected : Manual !");
