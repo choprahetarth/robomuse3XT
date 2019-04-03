@@ -1,14 +1,10 @@
-float diffEncIMU = 0.0;
 float deltaIMUTheta =0;
 float newRollFromIMU = 0;
 float deltaIMUROLLTheta =0;
 float oldRollFromIMU =0;
 float totalIMURollTheta =0;
 ///////// y pose estiate variables /////
-int poseTimer, oldPoseTimer, poseCount;
-double changeInTime, dtInSeconds;
-double position1, position2, positionPredicted, alphaY;
-double endYPose, speed1, angularSpeed, rotationTime, translationTime;
+float rotationTime, translationTime, angularSpeed, endYPose;
 ///////////////////////////////////////
 
 ////// Kalman Filter Variables ////////
@@ -37,47 +33,28 @@ double derivativeDeltaRoll = 0;
 
 //////////// Y Pose estimation /////////////////
 
-void yPoseEstimate(){
-    poseCount++;
-    alphaY = 0.7927190893;   /// calculated experimentaly from the data in the excel sheet 
-    poseTimer = millis();
-      if(poseCount % 1 ==0 ){
-       changeInTime = (poseTimer - oldPoseTimer); ////divided by 1000 to convert to seconds 
-       dtInSeconds = changeInTime / 1000 ;
-       position1 = poseCalculate(1, dtInSeconds,centreWheelVelocity);
-       position2 = poseCalculate(2, dtInSeconds,centreWheelVelocity);
-       positionPredicted = ((alphaY)*(position1) + (1-alphaY)*(position2));
-       Serial.print(" POSITION 2:  ");
-       Serial.println(position2);
-       Serial.print(" POSITION 1:  ");
-       Serial.print(position1);
-       Serial.print(" ROTATION TIME:  ");
-       Serial.print(rotationTime);
-       Serial.print(" TRANSLATION TIME:   ");
-       Serial.print(translationTime);
-       oldPoseTimer = poseTimer;
-       }
-  }
-
-float poseCalculate(int choice, float timeDifference  ,float speed1){
-      angularSpeed = (speed1 / 0.259);
-      if(angularSpeed == 0){
-        rotationTime = 0;
-        translationTime = timeDifference; //// the rotation time is calculated using the (poseTimer-oldPoseTimer)/1000
+float poseCalculate(int method, float timeDifference, float speed1 ){
+       angularSpeed = centreWheelVelocityAngular;
+       rotationTime = abs(filteredThetaInRadians / angularSpeed); //// rotation time to be calculated   
+       translationTime = (timeDifference - rotationTime);      /// translation time to be calculated
+       Serial.print(" ROTATION TIME : ");
+       Serial.println(rotationTime,4);
+       Serial.print(" TRANSLATION TIME: ");
+       Serial.print(translationTime,4);
+       Serial.print(" FILTERED THETA : ");
+       Serial.print(filteredThetaInRadians,4);
+       Serial.print(" ANGULAR VELOCITY: ");
+       Serial.print(angularSpeed);
+       Serial.print(" ACTUAL VELOCITY: ");
+       Serial.print(speed1);
+      if(method == 1){
+            endYPose = (0.256*(1-cos(filteredThetaInRadians)))*1000;
         }
-      else{
-      rotationTime = (filteredThetaInRadians / angularSpeed);  /// this will be infinity when the angular speed is zero. 
-      translationTime = (timeDifference - rotationTime);    //// error is present over here anyway
-        }  
-             if (choice == 1){
-                endYPose = (0.256*(1-cos(filteredThetaInRadians)))*1000;
-                 }
-              else if (choice == 2){
-                endYPose = ((0.256*(1-cos(filteredThetaInRadians)))+(speed1*translationTime*sin(filteredThetaInRadians)))*1000;
-                 }
-      return endYPose;
+       else if (method == 2){
+            endYPose = ((0.256*(1-cos(filteredThetaInRadians)))+(speed1*translationTime*sin(filteredThetaInRadians)))*1000;
+        }
+        return endYPose;
   }
-
 
 ////// to be addded, an additional PID to correct the y pose estimate ////// 
 
@@ -99,7 +76,6 @@ void navigationMode() {
     rightMotorSpeed = 30;
     odometryCalc();
     velocityApproximation();
-    errorDifference();
     setpoint = 0;
             //newKalmanFilter();
     slipDetection();
@@ -128,11 +104,6 @@ void speedRamp(float powerOfFunction, float speedValue){
 }
 
 
-
-void errorDifference(){
-  diffEncIMU = feedbackFromIMU - originalTheta;
-  //Serial.println(diffEncIMU);
-  }
 
 /*void newKalmanFilter(){
   //after 10 miliseconds the function should be initialized
@@ -205,6 +176,7 @@ void weightedFilter(){
     filteredThetaInRadians = filteredTheta * (M_PI/180);
     deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
     oldFilteredTheta = newFilteredTheta;
+    Serial.println(filteredThetaInRadians,4);
     //Serial.print("FILTER");
     //Serial.println(filteredTheta);
     //Serial.print("ENCODER");
