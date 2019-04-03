@@ -74,7 +74,7 @@ PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);
 /////angular velocity calculation variables/// 
 int startTime, currentTime, dt;
 double angularVelocityLeft, angularVelocityRight, angularVelocityCentre, velocityLeft, velocityRight, velocityCentre;
-double velocityLeftWheel, velocityRightWheel, centreWheelVelocity;
+double velocityLeftWheel, velocityRightWheel, centreWheelVelocity, centreWheelVelocityAngular;
 
 
 
@@ -117,6 +117,7 @@ void velocityApproximation(){
   velocityLeftWheel = leftWheelIncrement / dt;
   velocityRightWheel = rightWheelIncrement / dt;
   centreWheelVelocity = (velocityLeftWheel + velocityRightWheel)/2;
+  centreWheelVelocityAngular = centreWheelVelocity/0.518; 
   //Serial.print("new velocity:");
   //Serial.println(centreWheelVelocity);
   startTime = currentTime;
