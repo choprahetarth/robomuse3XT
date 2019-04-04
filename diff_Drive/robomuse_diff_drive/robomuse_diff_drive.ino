@@ -4,10 +4,15 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
 
-/*// Independent mode channels on Kangaroo are, by default, '1' and '2'.
-KangarooSerial  K(Serial2);
-KangarooChannel K_left(K, '2');
-KangarooChannel K_right(K, '1');   ///// these have to go */
+////// single time setup ///////
+
+Sabertooth saberTooth(128, Serial2);  // Packetized serial mode, Non-LI, 128 bit Addr. (0,0,1,1,1,1)
+Encoder enCoder_1(20, 21); // Left hand side enc., +ve value means forward
+Encoder enCoder_2(2, 3);  // Right hand side enc., -ve value means forward
+PID PID_L(&input, &outputL, &setpoint, KpL, KiL, KdL, P_ON_M, DIRECT);   //// pid variables 
+PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);   //// pid variables
+
+////////////////////////////////
 
 //Factor to get the correct angular velocity
 float angular_correct=1.06409;
@@ -62,24 +67,28 @@ float right_new=0;
 
 //**************************END**************************//
 
-  
  //Encoder Data Variables
   std_msgs::Int32 l_msg;
   std_msgs::Int32 r_msg;
+  std_msgs::Int32 f_theta;
   
   //Encoder Data Publishers
   ros::Publisher left_encoder("lwheel", &l_msg);
-  ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers 
+  ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
+  ros::PUblisher filtered_theta("filteredTheta", &f_theta); 
   
 void setup()
 { 
-  
+  startTime = millis();
 //**********Sabertooth Setup**********//  
-  Serial2.begin(9600);            //baud rate for communication with sabertooth
-  /*K_left.start();
-  K_left.home().wait();  
-  K_right.start();
-  K_right.home().wait();*/
+  Serial.begin(115200);   // Arduino to PC Communcation        
+  Serial2.begin(9600);    // Baud rate for communication with sabertooth
+  Serial3.begin(115200);  // Serial Communication with the Arduino Uno for I2C with IMU 
+  pinMode(34,OUTPUT);     // MEGA-UNO Link
+  PID_L.SetOutputLimits(minVal, maxVal);  // [Min,Max] values of output
+  PID_L.SetMode(AUTOMATIC);  // Automatic = ON, Manual = OFF
+  PID_R.SetOutputLimits(minVal, maxVal);
+  PID_R.SetMode(AUTOMATIC);
  
 
 //***********ROS INITIALISATION**************//  
