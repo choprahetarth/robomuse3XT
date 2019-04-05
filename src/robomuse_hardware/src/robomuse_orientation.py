@@ -7,6 +7,7 @@ from geometry_msgs.msg import Twist
 
 time = 0
 linear_vel = 0.25                                               #m/s
+#linear_vel = 0.02   reduced velocity so that the motors dont get damaged
 linear_to_ticks = 6161.47                                       #conversion factor
 ticks_acc = 1000
 ticks_deacc = 2000
@@ -44,7 +45,8 @@ def robomuse_position():
         pos_cmdvel.angular.y=0
         pos_cmdvel.angular.z=0
         while(time < position(linear_distance)):
-            pos_cmdvel.linear.x = 0.25
+            #pos_cmdvel.linear.x = 0.25
+	    pos_cmdvel.linear.x = linear_vel	
             publisher_val.publish(pos_cmdvel)
             rate.sleep()
             time = time + 0.1

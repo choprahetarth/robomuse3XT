@@ -19,11 +19,13 @@ PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);   //// pi
 ////////////////////////////////
 
 //Factor to get the correct angular velocity
-float angular_correct=1.06409;
+//float angular_correct=1.06409;  /// factor in order to compensate for the difference in wheel radius
 //Multipying factor for correcting the robot's trajectory(Difference in robot wheels)   
-float factor = 1.01638;
+float factor = 1.01638;   //// 
 //Multiplying factor to provide the right commands to Kangaroo(Angular vel(rad/s) changed to the corrected motor commands (1044.33*radius)) 
-float vel_to_cmd=(64.77456*angular_correct); 
+//float vel_to_cmd=(64.77456*angular_correct)/10; 
+float vel_to_cmd = (4.87);
+//float vel_to_cmd = (angular_correct);
 int startTime;
 long millis1=0;
 long oldPositionl=0;
@@ -38,9 +40,6 @@ float right_new=0;
 
 float minVal= -15;
 float maxVal = 15;
-
-
-
 
 
 ///////////ALL CALCULATIONS //////////////
@@ -162,15 +161,10 @@ void velocityApproximation(){
 
 
 
-
-
-
-
-
-
 //*************************ROS SETUP*************************//
   ros::NodeHandle  nh;
-  
+
+
   void left(const std_msgs::Float32& saber_l){
     left_new=float(saber_l.data);
     if(left_new!=left_old){
@@ -202,9 +196,9 @@ void velocityApproximation(){
 //**************************END**************************//
 
  //Encoder Data Variables
-  std_msgs::Int32 l_msg;
-  std_msgs::Int32 r_msg;
-  std_msgs::Int32 n_theta;
+  std_msgs::Int32 l_msg;    ////change to the float 
+  std_msgs::Int32 r_msg;    ////change to the float 
+  std_msgs::Float32 n_theta;
   
   //Encoder Data Publishers
   ros::Publisher left_encoder("lwheel", &l_msg);
@@ -215,9 +209,8 @@ void setup()
 { 
   startTime = millis();
 //**********Sabertooth Setup**********//  
-  Serial.begin(115200);   // Arduino to PC Communcation        
+  Serial.begin(9600);   // Arduino to PC Communcation        
   Serial2.begin(9600);    // Baud rate for communication with sabertooth
-  //Serial3.begin(115200);  // Serial Communication with the Arduino Uno for I2C with IMU 
   pinMode(34,OUTPUT);     // MEGA-UNO Link
   PID_L.SetOutputLimits(minVal, maxVal);  // [Min,Max] values of output
   PID_L.SetMode(AUTOMATIC);  // Automatic = ON, Manual = OFF
@@ -226,7 +219,7 @@ void setup()
  
 
 //***********ROS INITIALISATION**************//  
-  nh.getHardware()->setBaud(38400);
+  nh.getHardware()->setBaud(57600);
   
   //Publishers & Subscribers Initialise  
   nh.initNode();
@@ -247,9 +240,9 @@ void setup()
 void loop()
 {
   //Condition applied to Publish Data at 10Hz
-  if(millis()-millis1>100){
-    millis1+=100;    
-   
+  if(millis()-millis1>50){
+    millis1+=50;    
+   odometryCalc();
    //////// PUBLISHERS /////////////
 
     r_msg.data=rightWheelIncrement;     /// right wheel message
