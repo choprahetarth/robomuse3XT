@@ -40,33 +40,137 @@ float minVal= -15;
 float maxVal = 15;
 
 
+
+
+
+///////////ALL CALCULATIONS //////////////
+//////odometry variables ///////////////////////////////////////////////////
+
+double newLeftEncoderValue, newRightEncoderValue, leftEncoderIncrement, rightEncoderIncrement, leftWheelIncrement, rightWheelIncrement, theta, feedbackVariable, centreIncremental;
+double x, y, originalTheta, originalThetaIterable, oldLeftEncoderValue, oldRightEncoderValue ;
+double width = 518; //in millimeters
+float conversionFactorLeft = 0.01, conversionFactorRight= 0.01;
+
+/////////////////////////////////////////////////////////////////////////////
+////// filter variables /////////////////////////////////////////////////////
+
+float alpha4, alphaQ =0;
+float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
+float filterValue =0, gainValue = 0, deltaFilteredTheta;
+float newFilteredTheta, oldFilteredTheta, filteredThetaInRadians, filteredTheta;
+
+//////// velocity variables ////////////////////////////////////////////////
+
+int  currentTime, dt;
+double velocityLeft, velocityRight, velocityCentre;
+double velocityLeftWheel, velocityRightWheel, centreWheelVelocity, centreWheelVelocityAngular;
+
+//////////////////////////////////////////////////////////////////////////////
+//////// code to calculate odometry //////////////////////////////////////////
+
+void odometryCalc() {
+  newLeftEncoderValue = double(enCoder_1.read());
+  newRightEncoderValue = double(enCoder_2.read());
+  leftEncoderIncrement = newLeftEncoderValue - oldLeftEncoderValue;
+  rightEncoderIncrement = newRightEncoderValue - oldRightEncoderValue;
+  leftWheelIncrement = leftEncoderIncrement * conversionFactorLeft; // left side advanced-by-distance
+  rightWheelIncrement = rightEncoderIncrement * conversionFactorRight * (-1); // right side advanced-by-distance
+  theta = atan((rightWheelIncrement - leftWheelIncrement) / width);
+  theta = theta * (180/M_PI);
+  feedbackVariable = theta;
+  oldLeftEncoderValue = newLeftEncoderValue;
+  oldRightEncoderValue = newRightEncoderValue;
+  centreIncremental = ((leftWheelIncrement + rightWheelIncrement) / 2);
+  x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);   ///ORIGINAL XY
+  y = y + centreIncremental * sin(originalTheta + theta / 2);                
+  originalTheta = originalTheta + theta;
+  originalThetaIterable = originalThetaIterable + theta;
+}
+
+///// code to filter the heading angles /////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+
+
+/*void weightedFilter(){
+    //setpoint//
+    //filterSetPoint = 0;
+    //sensor priority//
+    alpha4 = 1;// complete priority
+    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+gainValue)));    // lesser the value of the gain Value, more priority to Encoders
+    if(centreWheelVelocity < 0.20){
+          gainValue = 5;
+      }
+    else {
+          gainValue = 0.1/centreWheelVelocity;
+      }
+
+    //filter//
+    complimentaryMeasurement1 = originalTheta; 
+    complimentaryMeasurement2 = YAW;
+    if ( abs(originalTheta - YAW) >0.1 && abs(originalTheta - YAW) <10)      {filterValue = alphaQ;}
+    else if ( abs(originalTheta - YAW) >10 )                                 {filterValue = alpha4;}
+    filteredTheta = (1-filterValue)*originalTheta + filterValue*(YAW);
+    newFilteredTheta = filteredTheta;
+    filteredThetaInRadians = filteredTheta * (M_PI/180);
+    deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
+    oldFilteredTheta = newFilteredTheta;
+  }*/
+
+  
+////// code in case the imu is thrown away ///////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+
+/*void plugAndPlay(){
+    if (!Serial3.available()){
+      filterValue = 0; /// full priority to the encoders
+      Serial.println("Switched to Encoder Navigation");
+      }
+   }*/
+
+//////////////////////////////////////////////////////////////////////////////
+////// slip detection combined code //////////////////////////////////////////
+
+/*void slipDetection(){
+    /// condition 1 : when there is a change in pitch  
+        //singleDifferentiation();x
+    /// condition 2 : when there is a difference between the wheels
+        weightedFilter();
+    /// condition 3 : when the actual odometries dont match 
+        // insert the INS Function once it is completed
+    /// condition 4 : in case the imu sensor is plugged off and thrown away 
+        plugAndPlay();
+  }*/
+  
+//////////////////////////////////////////////////////////////////////////////
+//////// code to approximate the velocity ///////////////////////////////////
+
+void velocityApproximation(){
+  currentTime = millis();
+  //dt = currentTime-startTime;
+  dt=30;  //////DETERMINE THIS EXPERIMENTALLY BEFORE TRYING IT OUT YOURSELVES
+  velocityLeftWheel = leftWheelIncrement / dt;
+  velocityRightWheel = rightWheelIncrement / dt;
+  centreWheelVelocity = (velocityLeftWheel + velocityRightWheel)/2;
+  centreWheelVelocityAngular = centreWheelVelocity/0.518; //// 0.518 will be the 
+  startTime = currentTime;
+  }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
 //*************************ROS SETUP*************************//
   ros::NodeHandle  nh;
   
-  //Callback function for left motor
-  /*void left( const std_msgs::Float32& roboclaw_l){                   //Publishes command to the motor only if the value recieved is different from the previous one      
-    left_new=float(roboclaw_l.data);   
-      if(left_new!=left_old){
-      left_old=left_new*vel_to_cmd*factor;                           //Left motor provided with extra velocity(smaller diameter)
-      K_left.s(left_old);           
-      }
-      if(left_new==0){
-        K_left.s(0);
-      }
-  }
-     
-  //Callback function for right motor 
-  void right( const std_msgs::Float32& roboclaw_r){                  //Publishes command to the motor only if the value recieved is different from the previous one 
-    right_new=roboclaw_r.data;
-    if(right_new!=right_old){
-    right_old=right_new*vel_to_cmd;
-    K_right.s(right_old);
-    }
-    if(right_new==0){
-    K_right.s(0);
-    }         
-  }*/
-
   void left(const std_msgs::Float32& saber_l){
     left_new=float(saber_l.data);
     if(left_new!=left_old){
@@ -154,7 +258,7 @@ void loop()
     
     left_encoder.publish( &l_msg );
     right_encoder.publish( &r_msg );
-    mormal_theta.publish( &n_theta );
+    normal_theta.publish( &n_theta );
   }
   nh.spinOnce();  
 }
