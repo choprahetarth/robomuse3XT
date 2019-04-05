@@ -1,0 +1,36 @@
+<launch>
+	<arg name="model" default="$(find robomuse_description)/urdf/robomuse.xacro"/>
+  	<!--<arg name="gui" default="true" />-->
+  	<!--arg name="rvizconfig" default="$(find robomuse_description)/rviz/urdf.rviz" /-->
+	<!--<param name="use_gui" value="$(arg gui)"/>-->
+	<!-- Load robot model -->
+	<param name="robot_description" command="$(find xacro)/xacro '$(find robomuse_description)/urdf/robomuse.xacro' --inorder"/>
+	
+	
+    
+    
+
+    <!-- Load controller config -->
+    <rosparam command="load" file="$(find robomuse_hardware)/config/robomuse_common.yaml"/>
+    <rosparam command="load" file="$(find robomuse_hardware)/config/joint_publish.yaml"/>	
+    <node name="controller_spawner"
+          pkg="controller_manager"
+          type="spawner"
+          output="screen"
+          
+	  args="robomuse_diff
+		robomuse"/>
+ 
+    <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" /-->
+    
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+    
+
+    <node name="robomuse_hw"
+          pkg="robomuse_hardware"
+          type="robomuse_hw"/>
+
+    <node name="robomuse_pose_server" pkg="robomuse_hardware" type="robomuse_pose_server"/>
+
+</launch>
