@@ -163,16 +163,19 @@ void velocityApproximation(){
 
 //*************************ROS SETUP*************************//
   ros::NodeHandle  nh;
-
+/////////////LEFT RIGHT MOTORS ARE REVERESED HERE AS COMPARED TO THE ORIGINAL CODE////////////////
 
   void left(const std_msgs::Float32& saber_l){
     left_new=float(saber_l.data);
     if(left_new!=left_old){
       left_old=left_new*vel_to_cmd*factor;                           //Left motor provided with extra velocity(smaller diameter)
-      saberTooth.motor(1,left_old);          
+      //// add the pid part here 
+      //PID_L.Compute();
+      //left_old = left_old + outputL;
+      saberTooth.motor(2,left_old);          
       }
       if(left_new==0){
-        saberTooth.motor(1,0);
+        saberTooth.motor(2,0);
       }
     
     }
@@ -181,10 +184,13 @@ void velocityApproximation(){
     right_new=float(saber_r.data);
     if(right_new!=right_old){
       right_old=right_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
-      saberTooth.motor(2,right_old);          
+      /// add the PID part here 
+      //PID_R.Compute();
+      //right_old = right_old + outputR;
+      saberTooth.motor(1,right_old);          
       }
       if(right_new==0){
-        saberTooth.motor(2,0);
+        saberTooth.motor(1,0);
       }
     
     }
@@ -196,14 +202,16 @@ void velocityApproximation(){
 //**************************END**************************//
 
  //Encoder Data Variables
-  std_msgs::Int32 l_msg;    ////change to the float 
-  std_msgs::Int32 r_msg;    ////change to the float 
-  std_msgs::Float32 n_theta;
+  std_msgs::Int32 l_msg;    ////no need to change to float
+  std_msgs::Int32 r_msg;    ////no need to change to float
+  std_msgs::Float32 n_theta; ///send with float 
+  std_msgs::Float32 c_vel;   ///send with float 
   
   //Encoder Data Publishers
   ros::Publisher left_encoder("lwheel", &l_msg);
   ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
   ros::Publisher normal_theta("normalTheta", &n_theta); 
+  ros::Publisher velo_centre("velocity", &c_vel);
   
 void setup()
 { 
@@ -211,6 +219,7 @@ void setup()
 //**********Sabertooth Setup**********//  
   Serial.begin(9600);   // Arduino to PC Communcation        
   Serial2.begin(9600);    // Baud rate for communication with sabertooth
+  Serial3.begin(115200);
   pinMode(34,OUTPUT);     // MEGA-UNO Link
   PID_L.SetOutputLimits(minVal, maxVal);  // [Min,Max] values of output
   PID_L.SetMode(AUTOMATIC);  // Automatic = ON, Manual = OFF
@@ -226,6 +235,7 @@ void setup()
   nh.advertise(left_encoder);
   nh.advertise(right_encoder);
   nh.advertise(normal_theta);
+  nh.advertise(velo_centre);
   nh.subscribe(l_motor);
   nh.subscribe(r_motor);
   while (!nh.connected())
@@ -242,16 +252,18 @@ void loop()
   //Condition applied to Publish Data at 10Hz
   if(millis()-millis1>50){
     millis1+=50;    
-   odometryCalc();
-   //////// PUBLISHERS /////////////
+    odometryCalc();
+    input = originalTheta;               /// PID input should be of the originalAngle
+    //////// PUBLISHERS /////////////
 
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message
     n_theta.data = originalTheta;       /// theta message 
-    
-    left_encoder.publish( &l_msg );
+    c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
+    left_encoder.publish( &l_msg ); // publishing actions
     right_encoder.publish( &r_msg );
     normal_theta.publish( &n_theta );
+    velo_centre.publish( &c_vel );
   }
   nh.spinOnce();  
 }
