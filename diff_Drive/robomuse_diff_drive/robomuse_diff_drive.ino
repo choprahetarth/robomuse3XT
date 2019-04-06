@@ -6,7 +6,9 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
 
-double input,outputL, outputR, setpoint, KpL, KiL, KdL, KpR, KiR, KdR;
+double input, setpoint;
+double KpL = 2, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+double KpR = 2, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
 
 ////// single time setup ///////
 
@@ -170,8 +172,8 @@ void velocityApproximation(){
     if(left_new!=left_old){
       left_old=left_new*vel_to_cmd*factor;                           //Left motor provided with extra velocity(smaller diameter)
       //// add the pid part here 
-      //PID_L.Compute();
-      //left_old = left_old + outputL;
+      PID_L.Compute();
+      left_old = left_old - outputL;
       saberTooth.motor(2,left_old);          
       }
       if(left_new==0){
@@ -185,8 +187,8 @@ void velocityApproximation(){
     if(right_new!=right_old){
       right_old=right_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
       /// add the PID part here 
-      //PID_R.Compute();
-      //right_old = right_old + outputR;
+      PID_R.Compute();
+      right_old = right_old + outputR;
       saberTooth.motor(1,right_old);          
       }
       if(right_new==0){
@@ -206,12 +208,17 @@ void velocityApproximation(){
   std_msgs::Int32 r_msg;    ////no need to change to float
   std_msgs::Float32 n_theta; ///send with float 
   std_msgs::Float32 c_vel;   ///send with float 
+  std_msgs::Float32 pid_l;
+  std_msgs::Float32 pid_r;
   
   //Encoder Data Publishers
   ros::Publisher left_encoder("lwheel", &l_msg);
   ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
   ros::Publisher normal_theta("normalTheta", &n_theta); 
-  ros::Publisher velo_centre("velocity", &c_vel);
+  ros::Publisher velo_centre("velo_centre", &c_vel);
+  ros::Publisher left_PID("pid_L", &pid_l );
+  ros::Publisher right_PID("pid_R", &pid_r);
+  
   
 void setup()
 { 
@@ -235,6 +242,8 @@ void setup()
   nh.advertise(left_encoder);
   nh.advertise(right_encoder);
   nh.advertise(normal_theta);
+  nh.advertise(left_PID);
+  nh.advertise(right_PID);
   nh.advertise(velo_centre);
   nh.subscribe(l_motor);
   nh.subscribe(r_motor);
@@ -253,12 +262,14 @@ void loop()
   if(millis()-millis1>50){
     millis1+=50;    
     odometryCalc();
+    setpoint =0;
     input = originalTheta;               /// PID input should be of the originalAngle
     //////// PUBLISHERS /////////////
-
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message
     n_theta.data = originalTheta;       /// theta message 
+    pid_l.data = float(outputL);
+    pid_r.data = float(outputR);
     c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
     left_encoder.publish( &l_msg ); // publishing actions
     right_encoder.publish( &r_msg );
