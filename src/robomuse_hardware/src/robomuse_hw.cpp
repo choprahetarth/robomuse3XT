@@ -137,8 +137,7 @@ int main(int argc, char **argv)
 
   //Control loop
   ros::Time prev_time=ros::Time::now();
-  //ros::Rate rate(10.0); //Updation rate 20Hz
-  ros::Rate rate(20.0); //Updation rate 20Hz
+  ros::Rate rate(10.0); //Updation rate 20Hz
 
   while(ros::ok())
   {
