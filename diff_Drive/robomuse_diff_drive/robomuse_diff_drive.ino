@@ -172,7 +172,7 @@ void velocityApproximation(){
     if(left_new!=left_old){
       left_old=left_new*vel_to_cmd*factor;                           //Left motor provided with extra velocity(smaller diameter)
       //// add the pid part here 
-      PID_L.Compute();
+      PID_L.Compute();PID_R.Compute();
       left_old = left_old - outputL;
       saberTooth.motor(2,left_old);          
       }
@@ -187,7 +187,7 @@ void velocityApproximation(){
     if(right_new!=right_old){
       right_old=right_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
       /// add the PID part here 
-      PID_R.Compute();
+      PID_R.Compute();PID_L.Compute();
       right_old = right_old + outputR;
       saberTooth.motor(1,right_old);          
       }
@@ -208,10 +208,10 @@ void velocityApproximation(){
   std_msgs::Int32 r_msg;    ////no need to change to float
   std_msgs::Float32 n_theta; ///send with float 
   std_msgs::Float32 c_vel;   ///send with float 
-  std_msgs::Float32 pid_l;
+  std_msgs::Float32 pid_l;   /// 
   std_msgs::Float32 pid_r;
   
-  //Encoder Data Publishers
+  //Encoder Data Publishers  
   ros::Publisher left_encoder("lwheel", &l_msg);
   ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
   ros::Publisher normal_theta("normalTheta", &n_theta); 
@@ -262,19 +262,23 @@ void loop()
   if(millis()-millis1>50){
     millis1+=50;    
     odometryCalc();
+    velocityApproximation();
     setpoint =0;
     input = originalTheta;               /// PID input should be of the originalAngle
     //////// PUBLISHERS /////////////
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message
-    n_theta.data = originalTheta;       /// theta message 
-    pid_l.data = float(outputL);
-    pid_r.data = float(outputR);
+    //n_theta.data = originalTheta;       /// theta message 
+    n_theta.data=float(outputL);
+    pid_l.data = originalTheta;
+    pid_r.data = right_old;
     c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
     left_encoder.publish( &l_msg ); // publishing actions
     right_encoder.publish( &r_msg );
     normal_theta.publish( &n_theta );
     velo_centre.publish( &c_vel );
+    left_PID.publish( &pid_l );
+    right_PID.publish( &pid_r );
   }
   nh.spinOnce();  
 }
