@@ -50,7 +50,7 @@ float maxVal = 15;
 double newLeftEncoderValue, newRightEncoderValue, leftEncoderIncrement, rightEncoderIncrement, leftWheelIncrement, rightWheelIncrement, theta, feedbackVariable, centreIncremental;
 double x, y, originalTheta, originalThetaIterable, oldLeftEncoderValue, oldRightEncoderValue ;
 double width = 518; //in millimeters
-float conversionFactorLeft = 0.01, conversionFactorRight= 0.01;
+float conversionFactorLeft = 0.1, conversionFactorRight= 0.1;
 
 /////////////////////////////////////////////////////////////////////////////
 ////// filter variables /////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ void odometryCalc() {
   centreIncremental = ((leftWheelIncrement + rightWheelIncrement) / 2);
   x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);   ///ORIGINAL XY
   y = y + centreIncremental * sin(originalTheta + theta / 2);                
-  originalTheta = originalTheta + theta;
+  originalTheta = (originalTheta + theta);
   originalThetaIterable = originalThetaIterable + theta;
 }
 
@@ -170,7 +170,7 @@ void velocityApproximation(){
   void left(const std_msgs::Float32& saber_l){
     left_new=float(saber_l.data);
     if(left_new!=left_old){
-      left_old=left_new*vel_to_cmd*factor;                           //Left motor provided with extra velocity(smaller diameter)
+      left_old=left_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
       //// add the pid part here 
       PID_L.Compute();PID_R.Compute();
       left_old = left_old - outputL;
@@ -188,7 +188,7 @@ void velocityApproximation(){
       right_old=right_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
       /// add the PID part here 
       PID_R.Compute();PID_L.Compute();
-      right_old = right_old + outputR;
+      right_old = right_old+outputR;
       saberTooth.motor(1,right_old);          
       }
       if(right_new==0){
@@ -268,9 +268,8 @@ void loop()
     //////// PUBLISHERS /////////////
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message
-    //n_theta.data = originalTheta;       /// theta message 
-    n_theta.data=float(outputL);
-    pid_l.data = originalTheta;
+    n_theta.data = originalTheta;       /// theta message 
+    pid_l.data = left_old;
     pid_r.data = right_old;
     c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
     left_encoder.publish( &l_msg ); // publishing actions
