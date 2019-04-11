@@ -1,5 +1,6 @@
 #!/usr/bin/env python 
 import rospy
+from array import array
 from std_msgs.msg import Float32
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Imu
@@ -41,11 +42,11 @@ class converterClass():
 	    		msg.orientation.y,
             		msg.orientation.z,
 	    		msg.orientation.w]
-    		self.euler = trans.euler_from_quaternion(q_in) 
-    		self.ypr = Vector3(euler[2],
-           			euler[0],
-	   			euler[1])
-		rospy.loginfo(ypr)
+    		self.euler = trans.euler_from_quaternion(self.q_in) 
+    		self.ypr = Vector3(self.euler[2],
+           			self.euler[0],
+	   			self.euler[1])
+
 	
 
 if __name__ == '__main__':
