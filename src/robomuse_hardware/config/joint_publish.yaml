@@ -1,3 +1,5 @@
 robomuse:
   type: joint_state_controller/JointStateController
-  publish_rate: 10
+  publish_rate: 20
+
+#publish rate has been changed from 10 to 20 

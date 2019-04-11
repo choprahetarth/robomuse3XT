@@ -1,11 +1,10 @@
 <launch>
 	<arg name="model" default="$(find robomuse_description)/urdf/robomuse.xacro"/>
-  	<!--<arg name="gui" default="true" />-->
-  	<!--arg name="rvizconfig" default="$(find robomuse_description)/rviz/urdf.rviz" /-->
-	<!--<param name="use_gui" value="$(arg gui)"/>-->
+  	<arg name="gui" default="true" />
+  	<arg name="rvizconfig" default="$(find robomuse_description)/rviz/urdf.rviz"/>
+	<param name="use_gui" value="$(arg gui)"/>
 	<!-- Load robot model -->
 	<param name="robot_description" command="$(find xacro)/xacro '$(find robomuse_description)/urdf/robomuse.xacro' --inorder"/>
-	
 	
     
     
@@ -21,7 +20,7 @@
 	  args="robomuse_diff
 		robomuse"/>
  
-    <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" /-->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
     
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 

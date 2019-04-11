@@ -4,7 +4,7 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32
 
 def encoderCallback(msg):
-    rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.data)
+    rospy.loginfo("%s", msg.data)
 
 def yawCallback(msg):
     rospy.loginfo(rospy.get_caller_id() + "the yaw value", msg.data)

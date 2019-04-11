@@ -3,6 +3,7 @@
 import rospy
 from std_msgs.msg import Float32
 
+
 def anglePublisher():
     pub = rospy.Publisher('normalTheta', Float32, queue_size=20)
     rospy.init_node('angle1', anonymous=True)

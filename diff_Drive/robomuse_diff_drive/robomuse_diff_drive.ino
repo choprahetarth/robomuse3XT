@@ -6,6 +6,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
 
+int timeStamp;
 double input, setpoint;
 double KpL = 2, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
 double KpR = 2, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
@@ -208,16 +209,18 @@ void velocityApproximation(){
   std_msgs::Int32 r_msg;    ////no need to change to float
   std_msgs::Float32 n_theta; ///send with float 
   std_msgs::Float32 c_vel;   ///send with float 
-  std_msgs::Float32 pid_l;   /// 
-  std_msgs::Float32 pid_r;
+  //std_msgs::Float32 pid_l;   /// 
+  //std_msgs::Float32 pid_r;
+  std_msgs::Int16 time_stamp; //// send timestamps
   
   //Encoder Data Publishers  
   ros::Publisher left_encoder("lwheel", &l_msg);
   ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
   ros::Publisher normal_theta("normalTheta", &n_theta); 
   ros::Publisher velo_centre("velo_centre", &c_vel);
-  ros::Publisher left_PID("pid_L", &pid_l );
-  ros::Publisher right_PID("pid_R", &pid_r);
+  ros::Publisher stamp("time", &time_stamp);
+  //ros::Publisher left_PID("pid_L", &pid_l );
+  //ros::Publisher right_PID("pid_R", &pid_r);
   
   
 void setup()
@@ -242,8 +245,9 @@ void setup()
   nh.advertise(left_encoder);
   nh.advertise(right_encoder);
   nh.advertise(normal_theta);
-  nh.advertise(left_PID);
-  nh.advertise(right_PID);
+  //nh.advertise(left_PID);
+  //nh.advertise(right_PID);
+  nh.advertise(stamp);
   nh.advertise(velo_centre);
   nh.subscribe(l_motor);
   nh.subscribe(r_motor);
@@ -261,6 +265,7 @@ void loop()
   //Condition applied to Publish Data at 10Hz
   if(millis()-millis1>50){
     millis1+=50;    
+    timeStamp = millis();
     odometryCalc();
     velocityApproximation();
     setpoint =0;
@@ -269,15 +274,17 @@ void loop()
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message
     n_theta.data = originalTheta;       /// theta message 
-    pid_l.data = left_old;
-    pid_r.data = right_old;
+    time_stamp.data = timeStamp;        /// time stamp message to the variable 
+    //pid_l.data = left_old;
+    //pid_r.data = right_old;
     c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
-    left_encoder.publish( &l_msg ); // publishing actions
+    left_encoder.publish( &l_msg );     /// publishing actions
     right_encoder.publish( &r_msg );
     normal_theta.publish( &n_theta );
     velo_centre.publish( &c_vel );
-    left_PID.publish( &pid_l );
-    right_PID.publish( &pid_r );
+    stamp.publish( &time_stamp );      /// add the message type to stamp
+    //left_PID.publish( &pid_l );
+    //right_PID.publish( &pid_r );
   }
   nh.spinOnce();  
 }

@@ -6,6 +6,7 @@
 #include <joint_state_controller/joint_state_controller.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
+#include <ros/console.h>
 
 
 //Hardware Interface for Robomuse
@@ -34,11 +35,22 @@ public:
 
   }
 
+  void resetWheelEncoders(){
+    if (leftCallbackFlag == 0 && rightCallbackFlag == 0){
+      _wheel_angle[0] = 0;
+      _wheel_angle[1] = 0;
+    }
+    leftCallbackFlag=0;
+    rightCallbackFlag=0;
+  }
+
 //Write function for publishing values to the motor
   void write() {
     double diff_ang_speed_right = cmd[1];
     double diff_ang_speed_left = cmd[0];
-
+    //resetWheelEncoders();
+    //leftCallbackFlag=0;
+    //rightCallbackFlag=0;
     std_msgs::Float32 left_wheel_vel_msg;
     std_msgs::Float32 right_wheel_vel_msg;
     left_wheel_vel_msg.data = diff_ang_speed_left;
@@ -93,6 +105,8 @@ private:
   double vel[2];
   double eff[2];
   double _wheel_angle[2];
+  int leftCallbackFlag = 0;
+  int rightCallbackFlag = 0;
 
 
   //double ang_distance_left_old=0;
@@ -104,18 +118,18 @@ private:
 
   void leftWheelAngleCallback(const std_msgs::Int32& msg) {
     _wheel_angle[0] = msg.data;
+    leftCallbackFlag = 1;
   }
 
   void rightWheelAngleCallback(const std_msgs::Int32& msg) {
     _wheel_angle[1] = msg.data;
+    rightCallbackFlag = 1;
   }
 
-  ros::Publisher left_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("lmotor_cmd", 10);
-  ros::Publisher right_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("rmotor_cmd", 10);
-
-
-  ros::Subscriber left_wheel_angle_sub_ = nh.subscribe("lwheel", 10, &MyRobot::leftWheelAngleCallback, this);
-  ros::Subscriber right_wheel_angle_sub_ = nh.subscribe("rwheel", 10, &MyRobot::rightWheelAngleCallback, this);
+  ros::Publisher left_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("lmotor_cmd", 20);     /// changed thequeue size from 10 to 20
+  ros::Publisher right_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("rmotor_cmd", 20);	/// changed the queue size from 10 to 20
+  ros::Subscriber left_wheel_angle_sub_ = nh.subscribe("lwheel", 20, &MyRobot::leftWheelAngleCallback, this);		/// changed the queue size from  10 to 20
+  ros::Subscriber right_wheel_angle_sub_ = nh.subscribe("rwheel", 20, &MyRobot::rightWheelAngleCallback, this);		/// chanegd the queue size from  10 to 20
 
 };
 
@@ -129,7 +143,6 @@ int main(int argc, char **argv)
   //Setup the control manager update loop
   MyRobot robot;
   controller_manager::ControllerManager cm(&robot);  //Controller manager would update the robot HW interface objects(read as well as write)
-
 //Spinner thread, not Real Time   (for controller manager API, controller ROS API and other's)
   ros::AsyncSpinner spinner(10);
   spinner.start();
@@ -137,7 +150,8 @@ int main(int argc, char **argv)
 
   //Control loop
   ros::Time prev_time=ros::Time::now();
-  ros::Rate rate(10.0); //Updation rate 20Hz
+  //ros::Rate rate(10.0); //Updation rate 10Hz
+  ros::Rate rate(20.0); //Updation rate 20Hz		UPDATED IN  ARUDINO
 
   while(ros::ok())
   {
@@ -148,6 +162,7 @@ int main(int argc, char **argv)
     robot.read(period);
     cm.update(time, period);
     robot.write();
+    robot.resetWheelEncoders();
 
     rate.sleep();
 
