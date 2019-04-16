@@ -56,10 +56,7 @@ float conversionFactorLeft = 0.1, conversionFactorRight= 0.1;
 /////////////////////////////////////////////////////////////////////////////
 ////// filter variables /////////////////////////////////////////////////////
 
-float alpha4, alphaQ =0;
-float complimentaryMeasurement1 , complimentaryMeasurement2 =0;
-float filterValue =0, gainValue = 0, deltaFilteredTheta;
-float newFilteredTheta, oldFilteredTheta, filteredThetaInRadians, filteredTheta;
+float filteredTheta;
 
 //////// velocity variables ////////////////////////////////////////////////
 
@@ -88,64 +85,6 @@ void odometryCalc() {
   originalTheta = (originalTheta + theta);
   originalThetaIterable = originalThetaIterable + theta;
 }
-
-///// code to filter the heading angles /////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-
-
-/*void weightedFilter(){
-    //setpoint//
-    //filterSetPoint = 0;
-    //sensor priority//
-    alpha4 = 1;// complete priority
-    alphaQ = 1*((abs(originalTheta-YAW)/(abs(originalTheta-YAW)+gainValue)));    // lesser the value of the gain Value, more priority to Encoders
-    if(centreWheelVelocity < 0.20){
-          gainValue = 5;
-      }
-    else {
-          gainValue = 0.1/centreWheelVelocity;
-      }
-
-    //filter//
-    complimentaryMeasurement1 = originalTheta; 
-    complimentaryMeasurement2 = YAW;
-    if ( abs(originalTheta - YAW) >0.1 && abs(originalTheta - YAW) <10)      {filterValue = alphaQ;}
-    else if ( abs(originalTheta - YAW) >10 )                                 {filterValue = alpha4;}
-    filteredTheta = (1-filterValue)*originalTheta + filterValue*(YAW);
-    newFilteredTheta = filteredTheta;
-    filteredThetaInRadians = filteredTheta * (M_PI/180);
-    deltaFilteredTheta = newFilteredTheta - oldFilteredTheta;
-    oldFilteredTheta = newFilteredTheta;
-  }*/
-
-  
-////// code in case the imu is thrown away ///////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-
-
-/*void plugAndPlay(){
-    if (!Serial3.available()){
-      filterValue = 0; /// full priority to the encoders
-      Serial.println("Switched to Encoder Navigation");
-      }
-   }*/
-
-//////////////////////////////////////////////////////////////////////////////
-////// slip detection combined code //////////////////////////////////////////
-
-/*void slipDetection(){
-    /// condition 1 : when there is a change in pitch  
-        //singleDifferentiation();x
-    /// condition 2 : when there is a difference between the wheels
-        weightedFilter();
-    /// condition 3 : when the actual odometries dont match 
-        // insert the INS Function once it is completed
-    /// condition 4 : in case the imu sensor is plugged off and thrown away 
-        plugAndPlay();
-  }*/
-  
-//////////////////////////////////////////////////////////////////////////////
-//////// code to approximate the velocity ///////////////////////////////////
 
 void velocityApproximation(){
   currentTime = millis();
@@ -195,12 +134,16 @@ void velocityApproximation(){
       if(right_new==0){
         saberTooth.motor(1,0);
       }
-    
     }
+
+    void fil_theta(const std_msgs::Float32& ftheta){
+     filteredTheta = float(ftheta.data); 
+      }
 
   //Motor Command Subscribers
   ros::Subscriber<std_msgs::Float32> l_motor("lmotor_cmd", &left );   //// left wheel command vel subscriber
   ros::Subscriber<std_msgs::Float32> r_motor("rmotor_cmd", &right );  //// right wheel command vel subscriber
+  ros::Subscriber<std_msgs::Float32> f_theta("filteredTheta", &fil_theta);
 
 //**************************END**************************//
 
@@ -209,18 +152,12 @@ void velocityApproximation(){
   std_msgs::Int32 r_msg;    ////no need to change to float
   std_msgs::Float32 n_theta; ///send with float 
   std_msgs::Float32 c_vel;   ///send with float 
-  //std_msgs::Float32 pid_l;   /// 
-  //std_msgs::Float32 pid_r;
-  std_msgs::Int16 time_stamp; //// send timestamps
   
   //Encoder Data Publishers  
   ros::Publisher left_encoder("lwheel", &l_msg);
   ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
   ros::Publisher normal_theta("normalTheta", &n_theta); 
   ros::Publisher velo_centre("velo_centre", &c_vel);
-  ros::Publisher stamp("time", &time_stamp);
-  //ros::Publisher left_PID("pid_L", &pid_l );
-  //ros::Publisher right_PID("pid_R", &pid_r);
   
   
 void setup()
@@ -245,12 +182,10 @@ void setup()
   nh.advertise(left_encoder);
   nh.advertise(right_encoder);
   nh.advertise(normal_theta);
-  //nh.advertise(left_PID);
-  //nh.advertise(right_PID);
-  nh.advertise(stamp);
   nh.advertise(velo_centre);
   nh.subscribe(l_motor);
   nh.subscribe(r_motor);
+  nh.subscribe(f_theta);
   while (!nh.connected())
   {
     nh.spinOnce();
@@ -269,22 +204,16 @@ void loop()
     odometryCalc();
     velocityApproximation();
     setpoint =0;
-    input = originalTheta;               /// PID input should be of the originalAngle
+    input = filteredTheta;               /// PID input should be of the filteredTheta
     //////// PUBLISHERS /////////////
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message
-    n_theta.data = originalTheta;       /// theta message 
-    time_stamp.data = timeStamp;        /// time stamp message to the variable 
-    //pid_l.data = left_old;
-    //pid_r.data = right_old;
+    n_theta.data = originalTheta;       /// theta message  
     c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
     left_encoder.publish( &l_msg );     /// publishing actions
     right_encoder.publish( &r_msg );
     normal_theta.publish( &n_theta );
     velo_centre.publish( &c_vel );
-    stamp.publish( &time_stamp );      /// add the message type to stamp
-    //left_PID.publish( &pid_l );
-    //right_PID.publish( &pid_r );
   }
   nh.spinOnce();  
 }

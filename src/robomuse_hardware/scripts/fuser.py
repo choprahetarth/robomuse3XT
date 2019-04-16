@@ -17,7 +17,7 @@ class fuser():
 		rospy.Subscriber('normalTheta', Float32, self.theta_callback)
 		rospy.Subscriber('velo_centre', Float32, self.velocity_callback)
 		# publishers
-		self.filter = rospy.Publisher('totalYaw', Float64, queue_size = 20)
+		self.filter = rospy.Publisher('totalYaw', Float32, queue_size = 20)
 		# variables
 		self.rate = rospy.get_param("~rate", 20)
 		# values for the filter
