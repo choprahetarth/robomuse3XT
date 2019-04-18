@@ -35,7 +35,7 @@ long oldPositionl=0;
 long newPositionl;
 long oldPositionr=0;
 long newPositionr;
-
+int pinDetected;
 float left_old=0;
 float right_old=0;
 float left_new=0;
@@ -97,6 +97,10 @@ void velocityApproximation(){
   startTime = currentTime;
   }
 
+ void obstacleDetection(){
+  pinDetected = digitalRead(32);
+  }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -147,17 +151,19 @@ void velocityApproximation(){
 
 //**************************END**************************//
 
- //Encoder Data Variables
+ //Data Variables
   std_msgs::Int32 l_msg;    ////no need to change to float
   std_msgs::Int32 r_msg;    ////no need to change to float
   std_msgs::Float32 n_theta; ///send with float 
   std_msgs::Float32 c_vel;   ///send with float 
+  std_msgs::Int16 obs_det;   ///variable for the obstacle flag
   
-  //Encoder Data Publishers  
+  //Data Publishers  
   ros::Publisher left_encoder("lwheel", &l_msg);
   ros::Publisher right_encoder("rwheel", &r_msg);       /// we need the publishers
   ros::Publisher normal_theta("normalTheta", &n_theta); 
   ros::Publisher velo_centre("velo_centre", &c_vel);
+  ros::Publisher obstacle("obstacle_pin", &obs_det );
   
   
 void setup()
@@ -167,7 +173,7 @@ void setup()
   Serial.begin(9600);   // Arduino to PC Communcation        
   Serial2.begin(9600);    // Baud rate for communication with sabertooth
   Serial3.begin(115200);
-  pinMode(34,OUTPUT);     // MEGA-UNO Link
+  pinMode(32,INPUT);     // MEGA-UNO Link for Ultrasonic Sensors
   PID_L.SetOutputLimits(minVal, maxVal);  // [Min,Max] values of output
   PID_L.SetMode(AUTOMATIC);  // Automatic = ON, Manual = OFF
   PID_R.SetOutputLimits(minVal, maxVal);
@@ -183,6 +189,7 @@ void setup()
   nh.advertise(right_encoder);
   nh.advertise(normal_theta);
   nh.advertise(velo_centre);
+  nh.advertise(obstacle);
   nh.subscribe(l_motor);
   nh.subscribe(r_motor);
   nh.subscribe(f_theta);
@@ -203,6 +210,7 @@ void loop()
     timeStamp = millis();
     odometryCalc();
     velocityApproximation();
+    obstacleDetection();
     setpoint =0;
     input = filteredTheta;               /// PID input should be of the filteredTheta
     //////// PUBLISHERS /////////////
@@ -210,10 +218,12 @@ void loop()
     l_msg.data=leftWheelIncrement;      /// left wheel message
     n_theta.data = originalTheta;       /// theta message  
     c_vel.data = centreWheelVelocity;   /// centre wheel velocity 
+    obs_det.data = pinDetected;
     left_encoder.publish( &l_msg );     /// publishing actions
     right_encoder.publish( &r_msg );
     normal_theta.publish( &n_theta );
     velo_centre.publish( &c_vel );
+    obstacle.publish( &obs_det );
   }
   nh.spinOnce();  
 }
