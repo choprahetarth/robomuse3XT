@@ -13,13 +13,13 @@
   <!--PS3 Teleop Launch-->
   <include file="$(find teleop_twist_joy)/launch/teleop.launch"/>
 
-  <!--Keyboard Teleop Launch-->
-  <node pkg="robomuse_simulation" name="robomuse5_teleop" type="teleop.py" />
+  <!--Obstacle Detection Launch-->
+  <node pkg="robomuse_hardware" name="obstacle_detection" type="obstacle.py" />
 
   <!--Teleop Mux Launch-->
   <include file="$(find twist_mux)/launch/twist_mux.launch"/>
 
   <!--rqt_image_view-->
-  <node pkg="rqt_image_view" type="rqt_image_view" name="image_view_debug">
+  <node pkg="rqt_image_view" type="rqt_image_view" name="image_view_debug"/>
 
 </launch>

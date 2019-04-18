@@ -22,7 +22,7 @@ class box():
 		self.cmd = rospy.Publisher('autonomous/cmd_vel', Twist, queue_size = 20)
 		# variables
 		self.rate = rospy.get_param("~rate", 20)
-		# values for the filter
+		# values for the box path function
 		self.originalTheta = 0.0
 		self.angles = [90,180,270,360]
 		self.x = 0.0
@@ -33,6 +33,9 @@ class box():
 		self.distanceIncrement = 0.0
 		self.command_vel = Twist()
 		self.currentDistance = 0.0
+		self.oldTheta = 0.0
+		self.newTheta = 0.0
+		self.thetaIncrement = 0.0
 
 	# callback functions
 	def distance_callback(self, msg):
@@ -76,19 +79,22 @@ class box():
 			exitFlag = 1
 			#then travel to the loop of the angle
 
-			while (self.originalTheta < self.angles[nloops-1]):
-				print(self.originalTheta)
+			while (self.currentTheta < self.angles[nloops-1]):
+				self.currentTheta = self.currentTheta + self.thetaIncrement
+				print(self.currentTheta)
 				self.command_vel.linear.x = 0.0
 				self.command_vel.angular.z = 0.2
+				if (abs(self.currentTheta - self.angles[nloops-1]) <10):
+					self.command_vel.angular.z = 0.1
 				self.cmd.publish(self.command_vel)
 				rospy.Rate(self.rate).sleep()
+		sC.resetTheta()
+
 	def resetXY(self):
 		print("i am here")
 		self.currentDistance = 0.0
-
-	def speedTurn(self):
-		print("i have finally entered this loop")
-		#speedVariable = (0.2/self.originalTheta)*parameter
+	def resetTheta(self):
+		self.currentTheta = 0.0
 
 
 if __name__ == '__main__':
