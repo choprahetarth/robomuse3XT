@@ -8,8 +8,8 @@
 
 int timeStamp;
 double input, setpoint;
-double KpL = 2, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
-double KpR = 2, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
+double KpL = 1.5, KiL = 0.1, KdL = 0, outputL = 0; // Proportional, Integral & Derivative coefficients
+double KpR = 1.5, KiR = 0.1, KdR = 0, outputR = 0;  // of respective motors for PID control
 
 ////// single time setup ///////
 
@@ -40,7 +40,7 @@ float left_old=0;
 float right_old=0;
 float left_new=0;
 float right_new=0;
-
+int flag1 =0, flag2 =0;
 float minVal= -15;
 float maxVal = 15;
 
@@ -83,7 +83,7 @@ void odometryCalc() {
   x = x + centreIncremental * cos(originalTheta + theta / 2)*(-1);   ///ORIGINAL XY
   y = y + centreIncremental * sin(originalTheta + theta / 2);                
   originalTheta = (originalTheta + theta);
-  originalThetaIterable = originalThetaIterable + theta;
+  
 }
 
 void velocityApproximation(){
@@ -113,32 +113,31 @@ void velocityApproximation(){
 
   void left(const std_msgs::Float32& saber_l){
     left_new=float(saber_l.data);
-    if(left_new!=left_old){
-      left_old=left_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
-      //// add the pid part here 
-      PID_L.Compute();PID_R.Compute();
-      left_old = left_old - outputL;
-      saberTooth.motor(2,left_old);          
+    left_new = left_new *vel_to_cmd;
+      if (left_new !=0.0){
+      PID_R.Compute();PID_L.Compute();
+      left_new = left_new - outputL;}
+      else {
+      left_new = left_new;  
+        }
+      saberTooth.motor(2,left_new);
       }
-      if(left_new==0){
-        saberTooth.motor(2,0);
-      }
-    
-    }
 
     void right(const std_msgs::Float32& saber_r){
     right_new=float(saber_r.data);
-    if(right_new!=right_old){
-      right_old=right_new*vel_to_cmd;                           //Left motor provided with extra velocity(smaller diameter)
-      /// add the PID part here 
+    right_new = right_new * vel_to_cmd;
+      if (right_new !=0.0){
       PID_R.Compute();PID_L.Compute();
-      right_old = right_old+outputR;
-      saberTooth.motor(1,right_old);          
-      }
-      if(right_new==0){
-        saberTooth.motor(1,0);
-      }
+      right_new = right_new + outputR;}
+      else {
+      right_new = right_new;
+       } 
+      saberTooth.motor(1,right_new); 
     }
+      //if(right_new==0.0){
+        //saberTooth.motor(1,0);
+      //}
+    ///}
 
     void fil_theta(const std_msgs::Float32& ftheta){
      filteredTheta = float(ftheta.data); 
@@ -211,8 +210,7 @@ void loop()
     odometryCalc();
     velocityApproximation();
     obstacleDetection();
-    setpoint =0;
-    input = filteredTheta;               /// PID input should be of the filteredTheta
+    input = filteredTheta;             /// PID input should be of the filteredTheta
     //////// PUBLISHERS /////////////
     r_msg.data=rightWheelIncrement;     /// right wheel message
     l_msg.data=leftWheelIncrement;      /// left wheel message

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <!-- change this next line to include the launch file for your robot's hardware drivers: -->
+  <!--<include file="$(find knex_ros)/launch/knex_arduino_ser.launch" /> -->
+
+  <rosparam param="ticks_meter">1730</rosparam>
+
+  <node pkg="robomuse_simulation" type="pid_velocity.py" name="lpid_velocity">
+      <remap from="wheel" to="lwheel"/>
+      <remap from="motor_cmd" to="lmotor_cmd"/>
+      <remap from="wheel_vtarget" to="lwheel_vtarget"/>
+      <remap from="wheel_vel" to="lwheel_vel"/>
+      <rosparam param="Kp">4.455</rosparam>
+      <rosparam param="Ki">0.538</rosparam>
+      <rosparam param="Kd">0</rosparam>
+      <rosparam param="out_min">-250</rosparam>
+      <rosparam param="out_max">250</rosparam>
+      <rosparam param="rate">10</rosparam>
+      <rosparam param="timeout_ticks">4</rosparam>
+      <rosparam param="rolling_pts">2</rosparam>
+  </node>
+  <node pkg="robomuse_simulation" type="pid_velocity.py" name="rpid_velocity">
+      <remap from="wheel" to="rwheel"/>
+      <remap from="motor_cmd" to="rmotor_cmd"/>
+      <remap from="wheel_vtarget" to="rwheel_vtarget"/>
+      <remap from="wheel_vel" to="rwheel_vel"/>
+      <rosparam param="Kp">4.445</rosparam>
+      <rosparam param="Ki">0.553</rosparam>
+      <rosparam param="Kd">0</rosparam>
+      <rosparam param="out_min">-250</rosparam>
+      <rosparam param="out_max">250</rosparam>
+      <rosparam param="rate">10</rosparam>
+      <rosparam param="timeout_ticks">4</rosparam>
+      <rosparam param="rolling_pts">2</rosparam>
+  </node>
+
+<!--node pkg="differential_drive" type="virtual_joystick.py" name="virtual_joystick" output="screen"/-->
+  <node pkg="robomuse_simulation" type="diff_tf.py" name="diff_tf" output="screen" >
+  </node>
+  <node pkg="robomuse_simulation" type="twist_to_motors.py" name="twist_to_motors" output="screen">
+    <rosparam param="base_width">0.45</rosparam>
+  </node>
+
+</launch>

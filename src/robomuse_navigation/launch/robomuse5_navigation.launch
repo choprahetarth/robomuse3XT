@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+ <arg name="simulation" default="false" doc="type [true, false]"/>
+ <arg name="hardware" default="false" doc="type [true, false]"/>
+
+ <group if="$(eval arg('simulation')==true)">
+  <include file="$(find robomuse_navigation)/launch/sim_navigation.launch"/>
+ </group>
+	
+
+ <group if="$(eval arg('hardware')==true)">
+   <include file="$(find robomuse_navigation)/launch/hw_navigation.launch"/>
+ </group>
+
+</launch>
+

@@ -1,0 +1,27 @@
+local_costmap:
+  global_frame: /map
+  robot_base_frame: /base_link
+
+  plugins:
+     - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+     - {name: costmap_prohibition_layer,       type: "costmap_prohibition_layer_namespace::CostmapProhibitionLayer"}
+     - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+
+#range of the sensor reading that will result in an obstacle
+  obstacle_range: 2.5
+  raytrace_range: 3.0
+
+
+  inflation_radius: 1.75
+  cost_scaling_factor: 2.58
+
+  update_frequency: 20.0
+  publish_frequency: 20.0
+  transform_tolerance: 0.5  
+
+  static_map: false  
+  rolling_window: true
+  width: 3
+  height: 3
+  resolution: 0.05
+  

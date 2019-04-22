@@ -90,7 +90,7 @@ uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[64]; // FIFO storage buffer
+uint8_t fifoBuffer[256]; // FIFO storage buffer
 
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
@@ -126,6 +126,7 @@ void setup() {
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
         Wire.setClock(500000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+        //TWBR = 12; // set 400kHz mode @ 16MHz CPU or 200kHz mode @ 8MHz CPU
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
@@ -206,16 +207,7 @@ void loop() {
 
     // wait for MPU interrupt or extra packet(s) available
     while (!mpuInterrupt && fifoCount < packetSize) {
-        // other program behavior stuff here
-        // .
-        // .
-        // .
-        // if you are really paranoid you can frequently test in between other
-        // stuff to see if mpuInterrupt is true, and if so, "break;" from the
-        // while() loop to immediately process the MPU data
-        // .
-        // .
-        // .
+
     }
 
     // reset interrupt flag and get INT_STATUS byte
@@ -267,12 +259,13 @@ void loop() {
         teapotPacket[20] = fifoBuffer[36];
         teapotPacket[21] = fifoBuffer[37];
         //temperature
-        int16_t temperature = mpu.getTemperature();
+        /*int16_t temperature = mpu.getTemperature();
         teapotPacket[22] = temperature >> 8;
-        teapotPacket[23] = temperature & 0xFF;
+        teapotPacket[23] = temperature & 0xFF;*/
         Serial.write(teapotPacket, 28);
         teapotPacket[25]++; // packetCount, loops at 0xFF on purpose
-
+        //Serial.write(teapotPacket, 14);
+        //teapotPacket[11]++; // packetCount, loops at 0xFF on purpose
         // blink LED to indicate activity
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);

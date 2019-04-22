@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+  <!-- robomuse5_teleop_key already has its own built in velocity smoother -->
+  <node pkg="robomuse_simulation" type="robomuse5_teleop_key" name="robomuse5_teleop_key"  output="screen">
+  </node>
+</launch>

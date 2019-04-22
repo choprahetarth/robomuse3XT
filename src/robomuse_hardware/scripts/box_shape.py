@@ -83,7 +83,7 @@ class box():
 				self.currentTheta = self.currentTheta + self.thetaIncrement
 				print(self.currentTheta)
 				self.command_vel.linear.x = 0.0
-				self.command_vel.angular.z = 0.2
+				self.command_vel.angular.z = 0.3
 				if (abs(self.currentTheta - self.angles[nloops-1]) <10):
 					self.command_vel.angular.z = 0.1
 				self.cmd.publish(self.command_vel)

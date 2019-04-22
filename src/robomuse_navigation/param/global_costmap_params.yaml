@@ -1,0 +1,20 @@
+global_costmap:
+  global_frame: /map
+  robot_base_frame: /base_link
+
+  plugins:
+     - {name: static_layer, type: "costmap_2d::StaticLayer"}
+     - {name: costmap_prohibition_layer,       type: "costmap_prohibition_layer_namespace::CostmapProhibitionLayer"}
+     - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+     - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+
+#  inflation_radius: 1.75
+#  cost_scaling_factor: 2.58
+
+  update_frequency: 10.0
+  publish_frequency: 10.0
+  transform_tolerance: 0.5
+
+  static_map: true
+
+

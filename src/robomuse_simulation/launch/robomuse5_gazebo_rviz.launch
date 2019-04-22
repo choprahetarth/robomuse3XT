@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <include file="$(find robomuse_simulation)/launch/robomuse5_remote.launch">
+  </include>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find robomuse_simulation)/rviz/robomuse5_gazebo_model.rviz"/>
+</launch>

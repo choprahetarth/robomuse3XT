@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="$(find robomuse_cartographer)/maps/PAR_LAB_EXTENDED.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+  <arg name="multi_robot_name" default=""/>
+  <arg name="urdf_file" default="$(find xacro)/xacro --inorder '$(find robomuse_description)/urdf/robomuse.xacro'"/>
+  <param name="robot_description" command="$(arg urdf_file)"/>
+
+  <!--RPLidar-->
+  <node pkg="rplidar_ros" name="run_lidar" type="run_lidar.sh" output="screen"/>
+
+  <!--Serial Node>
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node" output="screen">
+    <param name="port" value="/dev/ttyUSB1"/>
+    <param name="baud" value="57600"/>
+    <param name="tf_prefix" value="$(arg multi_robot_name)"/>
+  </node-->
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" value="$(arg multi_robot_name)"/>
+  </node>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+  <!-- AMCL -->
+  <include file="$(find robomuse_navigation)/launch/hw_amcl.launch"/>
+
+  <!-- move_base -->
+  <include file="$(find robomuse_navigation)/launch/hw_move_base.launch">
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+  </include>
+
+  <!--Self_localization-->
+
+  <!--node pkg="robomuse_navigation" name="self_localization" type="self_localization.py" /-->
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)">
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find robomuse_navigation)/rviz/robomuse5_navigation.rviz"/>
+  </group>
+</launch>
