@@ -1,0 +1,8 @@
+prefix=/home/hetarthvader/robomuse3xt_ws/src/serial/build/devel
+
+Name: serial
+Description: Description of serial
+Version: 1.2.1
+Cflags: -I/home/hetarthvader/robomuse3xt_ws/src/serial/include
+Libs: -L/home/hetarthvader/robomuse3xt_ws/src/serial/build/devel/lib -lserial -lrt -lpthread
+Requires: 
