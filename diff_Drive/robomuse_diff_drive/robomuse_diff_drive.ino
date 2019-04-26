@@ -24,7 +24,7 @@ PID PID_R(&input, &outputR, &setpoint, KpR, KiR, KdR, P_ON_M, DIRECT);   //// pi
 //Factor to get the correct angular velocity
 //float angular_correct=1.06409;  /// factor in order to compensate for the difference in wheel radius
 //Multipying factor for correcting the robot's trajectory(Difference in robot wheels)   
-float factor = 1.72;   //// 
+float factor = 1.0072;   //// check the factor once more 
 //Multiplying factor to provide the right commands to Kangaroo(Angular vel(rad/s) changed to the corrected motor commands (1044.33*radius)) 
 //float vel_to_cmd=(64.77456*angular_correct)/10; 
 float vel_to_cmd = (4.87);
